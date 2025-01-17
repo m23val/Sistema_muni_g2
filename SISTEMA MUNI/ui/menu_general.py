@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import messagebox
 from PIL import Image, ImageTk
 from ui.main_window import MainWindow
+from ui.admin_panel import AdminPanel  
+from ui.visualize_panel import VisualizePanel  
 
 class MenuGeneral:
     def __init__(self, root):
@@ -12,7 +14,7 @@ class MenuGeneral:
 
         #ícono de la ventana
         try:
-            icon_path = r"C:\Users\marie\OneDrive\Escritorio\SISTEMA\Sistema_muni_g2\assets\logo.ico"  # Archivo .ico
+            icon_path = r"C:\Users\Max\Desktop\Sistema_muni_g2-main\assets\logo.ico"  # Archivo .ico
             self.root.iconbitmap(icon_path)  # Para archivos .ico
         except Exception as e:
             print(f"Error al cargar el ícono de la ventana: {e}")
@@ -20,7 +22,7 @@ class MenuGeneral:
 
         # Logo de la Municipalidad
         try:
-            image_path = r"C:\Users\marie\OneDrive\Escritorio\SISTEMA\Sistema_muni_g2\assets\logo_completo.png"
+            image_path = r"C:\Users\Max\Desktop\Sistema_muni_g2-main\assets\logo_completo.png"
             image = Image.open(image_path).resize((280, 120), Image.Resampling.LANCZOS)
             self.logo = ImageTk.PhotoImage(image)
             logo_label = tk.Label(self.root, image=self.logo, bg="#FFFFFF")
@@ -32,9 +34,9 @@ class MenuGeneral:
         tk.Label(root, text="BIENVENIDO AL SISTEMA DE ATENCIÓN AL CIUDADANO", font=("Arial", 18, "bold"), bg="#FFFFFF").pack(pady=20)
 
         # Botones con íconos
-        self.create_option_button("Ciudadano", "#00FF00", r"C:\Users\marie\OneDrive\Escritorio\SISTEMA\Sistema_muni_g2\assets\ciudadano.png", self.open_ciudadano)
-        self.create_option_button("Administrador", "#FFFF00", r"C:\Users\marie\OneDrive\Escritorio\SISTEMA\Sistema_muni_g2\assets\admin.png", self.open_admin)
-        self.create_option_button("Visualizar Turnos", "#00BFFF", r"C:\Users\marie\OneDrive\Escritorio\SISTEMA\Sistema_muni_g2\assets\visualTurno.png", self.view_turns)
+        self.create_option_button("Ciudadano", "#00FF00", r"C:\Users\Max\Desktop\Sistema_muni_g2-main\assets\ciudadano.png", self.open_ciudadano)
+        self.create_option_button("Administrador", "#FFFF00", r"C:\Users\Max\Desktop\Sistema_muni_g2-main\assets\admin.png", self.open_admin)
+        self.create_option_button("Visualizar Turnos", "#00BFFF", r"C:\Users\Max\Desktop\Sistema_muni_g2-main\assets\visualTurno.png", self.view_turns)
 
     def create_option_button(self, text, color, icon_path, command):
         #"""Crea un botón de opción con diseño personalizado."""
@@ -63,10 +65,23 @@ class MenuGeneral:
         new_root.mainloop()
 
 ##########################Abre el menu del administrador###########################
-    def open_admin(self):
-        messagebox.showinfo("Administrador", "Funcionalidad de administrador en desarrollo.")
 
-##########################Abre el menu de los turnos###########################
+########################## Abre el menu del administrador ###########################
+    def open_admin(self):
+        self.root.destroy()
+        new_root = tk.Tk()
+        AdminPanel(new_root)  # Crea una instancia del panel de administrador
+        new_root.mainloop()
+
+########################## Abre el menu de los turnos ###########################
     def view_turns(self):
-        """Lógica para visualizar turnos (por implementar)."""
-        messagebox.showinfo("Visualizar Turnos", "Funcionalidad de visualización de turnos en desarrollo.")
+        self.root.destroy()
+        new_root = tk.Tk()
+        VisualizePanel(new_root)  # Crea una instancia del panel de visualización (corrige aquí si es necesario)
+        new_root.mainloop()
+
+# Código para ejecutar el menú general
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = MenuGeneral(root)
+    root.mainloop()

@@ -13,7 +13,7 @@ class MainWindow:
         self.root.configure(bg="#FFFFFF")
 
         # Cambiar el ícono de la ventana
-        icon_path = r"C:\Users\marie\OneDrive\Escritorio\SISTEMA\Sistema_muni_g2\SISTEMA MUNI\assets\logo.ico"
+        icon_path = r"C:\Users\Max\Desktop\Sistema_muni_g2-main\assets\logo.ico"
         try:
             self.root.iconbitmap(icon_path)
         except Exception as e:
@@ -23,7 +23,7 @@ class MainWindow:
         # Cargar y mostrar la imagen
         try:
             #image_path = r"C:\Users\Max\Desktop\SISTEMA MUNI\assets\logo.png"  # Asegúrate de usar la extensión correcta
-            image_path = r"C:\Users\marie\OneDrive\Escritorio\SISTEMA\Sistema_muni_g2\SISTEMA MUNI\assets\logo.png"  # Asegúrate de usar la extensión correcta
+            image_path = r"C:\Users\Max\Desktop\Sistema_muni_g2-main\assets\logo.png"  # Asegúrate de usar la extensión correcta
             image = Image.open(image_path)
             image = image.resize((150, 150), Image.Resampling.LANCZOS)  # Corregido LANCZOS
             self.logo = ImageTk.PhotoImage(image)
@@ -146,10 +146,10 @@ class MainWindow:
                 cursor = connection.cursor()
                 numero_turno = self.obtener_siguiente_numero(cursor, prefijo)
                 cursor.execute("""
-                    INSERT INTO turnos (dni, numero_turno, estado, fecha_hora, prioridad) 
-                    VALUES (%s, %s, 'espera', CURRENT_TIMESTAMP, %s) 
+                    INSERT INTO turnos (dni, numero_turno, estado, fecha_hora, prioridad, motivo) 
+                    VALUES (%s, %s, 'espera', CURRENT_TIMESTAMP, %s, %s) 
                     RETURNING numero_turno
-                """, (dni, numero_turno, prioridad))
+                """, (dni, numero_turno, prioridad, motivo))
 
                 turno = cursor.fetchone()[0]
                 connection.commit()
