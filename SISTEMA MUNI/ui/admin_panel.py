@@ -2,7 +2,8 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from db.connection import get_connection
 from PIL import Image, ImageTk
-
+import time
+from threading import Thread
 
 class AdminPanel:
     def __init__(self, root):
@@ -10,59 +11,65 @@ class AdminPanel:
         self.root.title("Gestión de Turnos - Administrador")
         self.root.state('zoomed')  # Pantalla completa
         self.root.configure(bg="#F8F8F8")
+        self.turnos_atendidos = set()  # Para controlar el orden correcto de "Llamar" → "Siguiente"
 
         # Ícono de la ventana
         try:
-            icon_path = r"C:\Users\marie\OneDrive\Escritorio\SISTEMA\Sistema_muni_g2\assets\logo.ico"
+            icon_path = "C:/Users/Max/Desktop/Sistema_muni_g2-main/assets/logo.ico"
             self.root.iconbitmap(icon_path)
         except Exception as e:
             print(f"Error al cargar el ícono de la ventana: {e}")
 
         # Encabezado superior
-        header_frame = tk.Frame(root, bg="#00E201", height=80) ##00E201
+        header_frame = tk.Frame(root, bg="#00E201", height=80)
         header_frame.pack(fill=tk.X, side=tk.TOP)
 
-        #################### LOGO DE LA MUNI ###########################
+        
+
         try:
-            image_path = r"C:\Users\marie\OneDrive\Escritorio\SISTEMA\Sistema_muni_g2\assets\logo_completo.png"
+            image_path = "C:/Users/Max/Desktop/Sistema_muni_g2-main/assets/logo_completo.png"
             image = Image.open(image_path).resize((250, 80), Image.Resampling.LANCZOS)
             self.logo = ImageTk.PhotoImage(image)
-
         except Exception as e:
             print(f"Error al cargar el logo: {e}")
 
-        # Colocar el logo a la izquierda
         logo_label = tk.Label(header_frame, image=self.logo, bg="#00E201")
         logo_label.pack(side=tk.LEFT, padx=20, pady=12)
 
-        ############################ LOGO DE ADMINISTRADOR ########################
         try:
-            image_path_admin = r"C:\Users\marie\OneDrive\Escritorio\SISTEMA\Sistema_muni_g2\assets\admin.png"
-            image_admin = Image.open(image_path_admin).resize((30, 30), Image.Resampling.LANCZOS)  # Ajusta el tamaño
+            image_path_admin = "C:/Users/Max/Desktop/Sistema_muni_g2-main/assets/admin.png"
+            image_admin = Image.open(image_path_admin).resize((30, 30), Image.Resampling.LANCZOS)
             self.logo_admin = ImageTk.PhotoImage(image_admin)
         except Exception as e:
             print(f"Error al cargar el logo admin: {e}")
 
-        # Colocar el segundo logo al lado del texto "Administrador"
+        
+        right_container = tk.Frame(header_frame, bg="#00E201")
+        right_container.pack(side=tk.RIGHT, padx=20)
+
+        # Reloj en el contenedor derecho
+        self.clock_label = tk.Label(right_container, font=("Arial", 12), bg="#00E201", fg="white")
+        self.clock_label.pack(side=tk.RIGHT, padx=10)
+        self.update_clock()
+        
+        
+        
         admin_label = tk.Label(header_frame, text="Administrador", bg="#00E201", fg="black", font=("Arial", 14), anchor="e")
         admin_label.pack(side=tk.RIGHT, padx=20, pady=20)
 
         logo_admin_label = tk.Label(header_frame, image=self.logo_admin, bg="#00E201")
         logo_admin_label.pack(side=tk.RIGHT, padx=0)
 
-        ################################################################
-        # Título del panel
-        logo_label = tk.Label(header_frame, image=self.logo, bg="#00E201")
+        regresar_button = tk.Button(header_frame, text="Regresar", font=("Arial", 12, "bold"), bg="#FF8000", fg="white", command=self.regresar, padx=10, pady=5)
+        regresar_button.pack(side=tk.LEFT, padx=20)
+
         tk.Label(root, text="Atención", font=("Arial", 16, "bold"), bg="#F8F8F8", fg="#333333").pack(pady=10)
 
-        # Ccontenedor para la tabla y la barra de desplazamiento
         tree_frame = tk.Frame(root)
         tree_frame.pack(pady=20, padx=20, fill=tk.BOTH, expand=True)
 
-        # Crear la barra de desplazamiento vertical
         scrollbar = tk.Scrollbar(tree_frame, orient="vertical")
 
-        # Tabla de turnos
         style = ttk.Style()
         style.configure("Treeview.Heading", font=("Arial", 12, "bold"), background="#E8E8E8", foreground="#333333")
         style.configure("Treeview", font=("Arial", 11), rowheight=30, background="white", fieldbackground="white")
@@ -73,92 +80,169 @@ class AdminPanel:
         self.tree.heading("DNI", text="DNI")
         self.tree.heading("Motivo", text="Motivo")
         self.tree.heading("Estado", text="Estado")
-        self.tree.heading("Hora", text="Hora")    ####################### AÑADÍ HORA ###################
+        self.tree.heading("Hora", text="Hora")
         self.tree.heading("Ventanilla", text="Ventanilla")
 
-        # Empaquetar la tabla
         self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-
-        # Configurar la barra de desplazamiento
         scrollbar.config(command=self.tree.yview)
-
-        # Empaquetar la barra de desplazamiento
         scrollbar.pack(side=tk.RIGHT, fill="y")
+        bottom_frame = tk.Frame(root)
+        bottom_frame.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True, pady=10)
 
-        # Botones inferiores
+
+
+        completed_label = tk.Label(bottom_frame, text="Completados", font=("Arial", 12, "bold"), bg="#F8F8F8", fg="#333333")
+        completed_label.grid(row=0, column=0, padx=10, pady=5, sticky="w")
+        completed_frame = tk.Frame(bottom_frame)
+        completed_frame.grid(row=1, column=0, padx=10, pady=5, sticky="nsew")
+        
+        completed_scroll = tk.Scrollbar(completed_frame)
+        completed_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        self.completed_tree = ttk.Treeview(completed_frame, columns=("Turno", "DNI", "Hora Atención", "Hora Término"), 
+                                         show="headings", height=5, yscrollcommand=completed_scroll.set)
+        self.completed_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        completed_scroll.config(command=self.completed_tree.yview)
+
+        # Modificación de la tabla de cancelados con scrollbar
+        cancelled_label = tk.Label(bottom_frame, text="Cancelados", font=("Arial", 12, "bold"), bg="#F8F8F8", fg="#333333")
+        cancelled_label.grid(row=0, column=1, padx=10, pady=5, sticky="w")        
+        cancelled_frame = tk.Frame(bottom_frame)
+        cancelled_frame.grid(row=1, column=1, padx=10, pady=5, sticky="nsew")
+        
+        cancelled_scroll = tk.Scrollbar(cancelled_frame)
+        cancelled_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        self.cancelled_tree = ttk.Treeview(cancelled_frame, columns=("Turno", "DNI", "Motivo"), 
+                                         show="headings", height=5, yscrollcommand=cancelled_scroll.set)
+        self.cancelled_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        cancelled_scroll.config(command=self.cancelled_tree.yview)
+
+        # Configuración de los encabezados de las tablas
+        for col in ("Turno", "DNI", "Hora Atención", "Hora Término"):
+            self.completed_tree.heading(col, text=col)
+            self.completed_tree.column(col, width=100)
+
+        for col in ("Turno", "DNI", "Motivo"):
+            self.cancelled_tree.heading(col, text=col)
+            self.cancelled_tree.column(col, width=100)
+
+
+
+
+
+
+        bottom_frame.grid_columnconfigure(0, weight=1)
+        bottom_frame.grid_columnconfigure(1, weight=1)
+
         button_frame = tk.Frame(root, bg="#F8F8F8")
         button_frame.pack(pady=10, side=tk.BOTTOM)
 
-        ######################### LOGOS DE LOS BOTONES #############################
-
-        # Cargar el logo de "Siguiente"
-        try:
-            siguiente_logo_path = r"C:\Users\marie\OneDrive\Escritorio\SISTEMA\Sistema_muni_g2\assets\siguiente.png"
-            self.siguiente_logo = Image.open(siguiente_logo_path).resize((30, 20), Image.Resampling.LANCZOS)
-            self.siguiente_logo_img = ImageTk.PhotoImage(self.siguiente_logo)
-        except Exception as e:
-            print(f"Error al cargar el logo de 'Siguiente': {e}")
-
-        # Cargar el logo de "Llamar"
-        try:
-            llamar_logo_path = r"C:\Users\marie\OneDrive\Escritorio\SISTEMA\Sistema_muni_g2\assets\llamar.png"
-            self.llamar_logo = Image.open(llamar_logo_path).resize((20, 20), Image.Resampling.LANCZOS)
-            self.llamar_logo_img = ImageTk.PhotoImage(self.llamar_logo)
-        except Exception as e:
-            print(f"Error al cargar el logo de 'Llamar': {e}")
-
-        # Cargar el logo de "Eliminar"
-        try:
-            eliminar_logo_path = r"C:\Users\marie\OneDrive\Escritorio\SISTEMA\Sistema_muni_g2\assets\eliminar.png"
-            self.eliminar_logo = Image.open(eliminar_logo_path).resize((20, 20), Image.Resampling.LANCZOS)
-            self.eliminar_logo_img = ImageTk.PhotoImage(self.eliminar_logo)
-        except Exception as e:
-            print(f"Error al cargar el logo de 'Eliminar': {e}")
-
-        ######################### Botón SIGUIENTE ###################################
-        siguiente_button = tk.Button(button_frame, text="Siguiente", font=("Arial", 12, "bold"), bg="#0000FF", fg="white", 
-                                     compound="left", image=self.siguiente_logo_img, command=self.siguiente_turno, padx=10, pady=5)
+        siguiente_button = tk.Button(button_frame, text="Siguiente", font=("Arial", 12, "bold"), bg="#0000FF", fg="white", command=self.siguiente_turno, padx=10, pady=5)
         siguiente_button.grid(row=0, column=0, padx=15)
 
-        ######################### Botón LLAMAR ######################################
-        llamar_button = tk.Button(button_frame, text="Llamar", font=("Arial", 12, "bold"), bg="#008000", fg="white", 
-                                  compound="left", image=self.llamar_logo_img, command=self.llamar_turno, padx=10, pady=5)
+        llamar_button = tk.Button(button_frame, text="Llamar", font=("Arial", 12, "bold"), bg="#008000", fg="white", command=self.llamar_turno, padx=10, pady=5)
         llamar_button.grid(row=0, column=1, padx=15)
 
-        ######################### Botón ANULAR ######################################
-        anular_button = tk.Button(button_frame, text="Anular", font=("Arial", 12, "bold"), bg="#FF0000", fg="white", 
-                                  compound="left", image=self.eliminar_logo_img, command=self.eliminar_turno, padx=10, pady=5)
-        anular_button.grid(row=0, column=2, padx=15)
+        cancelar_button = tk.Button(button_frame, text="Cancelar", font=("Arial", 12, "bold"), bg="#FF0000", fg="white", command=self.cancelar_turno, padx=10, pady=5)
+        cancelar_button.grid(row=0, column=2, padx=15)
 
-        ###########################################################################
-
-        # Cargar turnos
         self.cargar_turnos()
 
+    def update_clock(self):
+        now = time.strftime("%I:%M:%S %p - %d/%m/%Y")
+        self.clock_label.config(text=now)
+        self.root.after(1000, self.update_clock)
+
+    def regresar(self):
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("menu_general", r"C:\Users\Max\Desktop\Sistema_muni_g2-main\SISTEMA MUNI\ui\menu_general.py")
+            menu_general = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(menu_general)
+
+            self.root.destroy()  # Cierra la ventana actual
+            new_root = tk.Tk()  # Crea una nueva instancia de Tkinter
+            menu_general.MenuGeneral(new_root)  # Llama al menú principal
+            new_root.mainloop()  # Ejecuta el bucle principal de la nueva ventana
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo regresar al menú principal: {e}")
+
     def cargar_turnos(self):
-        """Carga los turnos desde la base de datos en la tabla."""
         connection = get_connection()
         if connection:
             try:
                 cursor = connection.cursor()
-                cursor.execute("SELECT numero_turno, dni, motivo, estado, TO_CHAR(fecha_hora, 'HH12:MI AM') AS hora, ventanilla FROM turnos ORDER BY prioridad DESC, fecha_hora ASC ")
+
+                # Ordenar turnos según motivo y prioridad
+                cursor.execute("""
+                    SELECT 
+                        numero_turno, dni, motivo, estado, 
+                        TO_CHAR(fecha_hora, 'HH24:MI:SS') AS hora, ventanilla
+                    FROM turnos
+                    WHERE estado NOT IN ('completado', 'cancelado')
+                    ORDER BY 
+                        CASE 
+                            WHEN motivo = 'Multas' THEN 1  -- Muy Alta
+                            WHEN motivo = 'Pagos' THEN 2  -- Alta
+                            WHEN motivo = 'Deudas' THEN 3 -- Media
+                            WHEN motivo = 'Documentos' THEN 4 -- Baja
+                            WHEN motivo = 'Consultas' THEN 5 -- Muy Baja
+                            ELSE 6
+                        END,
+                        fecha_hora ASC
+                """)
                 turnos = cursor.fetchall()
 
-                # Limpiar la tabla
+                # Limpiar la tabla antes de cargar nuevos datos
                 for item in self.tree.get_children():
                     self.tree.delete(item)
 
-                # Insertar turnos
+                # Insertar turnos en la tabla
                 for turno in turnos:
                     self.tree.insert("", tk.END, values=turno)
+
+                # Cargar turnos completados
+                cursor.execute("""
+                    SELECT numero_turno, dni, 
+                        TO_CHAR(hora_atencion, 'HH24:MI:SS'), 
+                        TO_CHAR(hora_termino, 'HH24:MI:SS')
+                    FROM turnos
+                    WHERE estado = 'completado'
+                """)
+                completados = cursor.fetchall()
+
+                for item in self.completed_tree.get_children():
+                    self.completed_tree.delete(item)
+
+                for turno in completados:
+                    self.completed_tree.insert("", tk.END, values=turno)
+
+                # Cargar turnos cancelados
+                cursor.execute("""
+                    SELECT numero_turno, dni, motivo
+                    FROM turnos
+                    WHERE estado = 'cancelado'
+                """)
+                cancelados = cursor.fetchall()
+
+                for item in self.cancelled_tree.get_children():
+                    self.cancelled_tree.delete(item)
+
+                for turno in cancelados:
+                    self.cancelled_tree.insert("", tk.END, values=turno)
+
             except Exception as e:
                 messagebox.showerror("Error", f"Error al cargar turnos: {e}")
             finally:
                 cursor.close()
                 connection.close()
 
+
+
+
+
     def llamar_turno(self):
-        """Asigna un turno a una ventanilla y lo marca como 'atendiendo'."""
         selected_item = self.tree.selection()
         if not selected_item:
             messagebox.showwarning("Advertencia", "Seleccione un turno para llamar.")
@@ -169,8 +253,6 @@ class AdminPanel:
         if connection:
             try:
                 cursor = connection.cursor()
-
-                # Obtener ventanilla disponible
                 cursor.execute("SELECT ventanilla FROM encargados WHERE ventanilla NOT IN (SELECT ventanilla FROM turnos WHERE estado = 'atendiendo')")
                 ventanilla = cursor.fetchone()
 
@@ -178,9 +260,9 @@ class AdminPanel:
                     messagebox.showwarning("Advertencia", "No hay ventanillas disponibles.")
                     return
 
-                # Actualizar estado del turno
-                cursor.execute("UPDATE turnos SET estado = 'atendiendo', ventanilla = %s WHERE numero_turno = %s", (ventanilla[0], turno))
+                cursor.execute("UPDATE turnos SET estado = 'atendiendo', ventanilla = %s, hora_atencion = NOW() WHERE numero_turno = %s", (ventanilla[0], turno))
                 connection.commit()
+                self.turno_actual = turno  # Registrar turno en atención
                 messagebox.showinfo("Éxito", f"Turno {turno} asignado a la ventanilla {ventanilla[0]}.")
                 self.cargar_turnos()
             except Exception as e:
@@ -191,55 +273,85 @@ class AdminPanel:
                 connection.close()
 
     def siguiente_turno(self):
-        """Pasa al siguiente turno y libera la ventanilla."""
+        # Obtener el turno seleccionado
         selected_item = self.tree.selection()
         if not selected_item:
-            messagebox.showwarning("Advertencia", "Seleccione un turno para continuar.")
+            messagebox.showwarning("Advertencia", "Seleccione un turno para completar.")
             return
 
         turno = self.tree.item(selected_item)["values"][0]
+
+        # Conexión a la base de datos
         connection = get_connection()
         if connection:
             try:
                 cursor = connection.cursor()
+
+                # Verificar el estado del turno en la base de datos
+                cursor.execute("SELECT estado FROM turnos WHERE numero_turno = %s", (turno,))
+                estado = cursor.fetchone()
+
+                if not estado:
+                    messagebox.showerror("Error", f"El turno {turno} no existe.")
+                    return
+
+                # Si el estado no es "atendiendo", mostrar advertencia
+                if estado[0] != "atendiendo":
+                    messagebox.showwarning(
+                        "Advertencia",
+                        f"El turno {turno} debe estar en estado 'atendiendo' para poder completarse."
+                    )
+                    return
 
                 # Marcar el turno como completado
-                cursor.execute("UPDATE turnos SET estado = 'completado' WHERE numero_turno = %s", (turno,))
+                cursor.execute(
+                    "UPDATE turnos SET estado = 'completado', hora_termino = NOW() WHERE numero_turno = %s",
+                    (turno,)
+                )
                 connection.commit()
+
+                # Confirmar éxito
                 messagebox.showinfo("Éxito", f"Turno {turno} completado.")
                 self.cargar_turnos()
+
             except Exception as e:
                 connection.rollback()
-                messagebox.showerror("Error", f"Error al pasar al siguiente turno: {e}")
+                messagebox.showerror("Error", f"Error al completar turno: {e}")
             finally:
                 cursor.close()
                 connection.close()
 
-    def eliminar_turno(self):
-        """Elimina un turno seleccionado."""
+
+    def cancelar_turno(self):
         selected_item = self.tree.selection()
         if not selected_item:
-            messagebox.showwarning("Advertencia", "Seleccione un turno para eliminar.")
+            messagebox.showwarning("Advertencia", "Seleccione un turno para cancelar.")
             return
 
         turno = self.tree.item(selected_item)["values"][0]
+
         connection = get_connection()
         if connection:
             try:
                 cursor = connection.cursor()
-                cursor.execute("DELETE FROM turnos WHERE numero_turno = %s", (turno,))
+                cursor.execute("SELECT estado FROM turnos WHERE numero_turno = %s", (turno,))
+                estado = cursor.fetchone()
+
+                if not estado or estado[0] != "atendiendo":
+                    messagebox.showwarning("Advertencia", "Solo se pueden cancelar turnos que estén en estado 'atendiendo'.")
+                    return
+
+                cursor.execute("UPDATE turnos SET estado = 'cancelado' WHERE numero_turno = %s", (turno,))
                 connection.commit()
-                messagebox.showinfo("Éxito", f"Turno {turno} eliminado.")
+                messagebox.showinfo("Éxito", f"Turno {turno} cancelado.")
                 self.cargar_turnos()
             except Exception as e:
                 connection.rollback()
-                messagebox.showerror("Error", f"Error al eliminar turno: {e}")
+                messagebox.showerror("Error", f"Error al cancelar turno: {e}")
             finally:
                 cursor.close()
                 connection.close()
 
-
-# Prueba del panel de administrador
 if __name__ == "__main__":
     root = tk.Tk()
     app = AdminPanel(root)
