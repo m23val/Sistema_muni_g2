@@ -1,0 +1,122 @@
+
+------------------
+AÑADIR MOTIVOS
+----------------
+Gestión de licencias y permisos
+Solicitudes de información pública
+Trámites civiles y registrales
+Atención de quejas y reclamos
+Pago de tributos y arbitrios
+Inscripciones y registros municipales
+Propuestas y proyectos ciudadanos
+Consultas y orientación administrativa
+Denuncias y reportes comunitarios
+Participación en procesos municipales
+
+-----------
+MOTIVOS 
+------------
+Licencias y permisos
+Información pública
+Trámites civiles
+Quejas y reclamos
+Pago de tributos
+Registros municipales
+Propuestas ciudadanas
+Consultas administrativas
+Denuncias comunitarias
+Procesos municipales
+
+------------------
+- Consultas
+- Deudas
+- Documentos
+- Multas 
+- Pagos
+- Otros
+--------------------
+
+
+
+---------  RESUMIDO ----------
+Licencias y permisos
+Consultas
+Deudas
+Documentos
+Multas 
+Pagos
+
+Información pública
+Trámites civiles
+Quejas y reclamos
+Registros municipales
+Denuncias comunitarias
+
+
+---------- MÁS -----------------
+
+
+
+motivo = "Consultas":
+            prioridad = "Muy baja"
+motivo = "Documentos":
+            prioridad = "Baja"
+motivo = "Deudas":
+            prioridad = "Media"
+motivo = "Pagos":
+            prioridad = "Alta"
+motivo = "Multas":
+            prioridad = "Muy Alta"
+
+
+
+
+
+
+
+
+SQL
+
+UPDATE turnos
+SET numero_turno = 
+    CASE
+        WHEN motivo = 'Multas' THEN 'M-' || LPAD(CAST(SUBSTRING(numero_turno FROM '\d+$') AS INTEGER), 3, '0')
+        WHEN motivo = 'Pagos' THEN 'P-' || LPAD(CAST(SUBSTRING(numero_turno FROM '\d+$') AS INTEGER), 3, '0')
+        WHEN motivo = 'Deudas' THEN 'D-' || LPAD(CAST(SUBSTRING(numero_turno FROM '\d+$') AS INTEGER), 3, '0')
+        WHEN motivo = 'Documentos' THEN 'Doc-' || LPAD(CAST(SUBSTRING(numero_turno FROM '\d+$') AS INTEGER), 3, '0')
+        WHEN motivo = 'Consultas' THEN 'C-' || LPAD(CAST(SUBSTRING(numero_turno FROM '\d+$') AS INTEGER), 3, '0')
+        ELSE numero_turno
+    END;
+
+
+
+
+
+
+
+
+SELECT numero_turno, dni, 
+    TO_CHAR(hora_atencion, 'HH24:MI:SS'), 
+    TO_CHAR(hora_termino, 'HH24:MI:SS')
+FROM turnos
+WHERE estado = 'completado'
+ORDER BY hora_termino ASC
+
+
+
+
+
+
+
+
+
+
+
+SELECT numero_turno, dni, 
+    TO_CHAR(hora_atencion, 'HH24:MI:SS'), 
+    TO_CHAR(hora_termino, 'HH24:MI:SS')
+FROM turnos
+WHERE estado = 'completado'
+ORDER BY hora_termino ASC
+
+
