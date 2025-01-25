@@ -5,15 +5,16 @@ from PIL import Image, ImageTk
 import time
 from threading import Thread
 
+
 class AdminPanel:
     def __init__(self, root):
         self.root = root
         self.root.title("Gestión de Turnos - Administrador")
         self.root.state('zoomed')  # Pantalla completa
         self.root.configure(bg="#F8F8F8")
-        self.turnos_atendidos = set()  # Para controlar el orden correcto de "Llamar" → "Siguiente"
+        self.turnos_atendidos = set()  # Para controlar el orden correcto de "Llamar" â†’ "Siguiente"
 
-        # Ícono de la ventana
+        # Ãcono de la ventana
         try:
             icon_path = "C:/Users/Max/Desktop/Sistema_muni_g2-main/assets/logo.ico"
             self.root.iconbitmap(icon_path)
@@ -48,7 +49,7 @@ class AdminPanel:
         right_container.pack(side=tk.RIGHT, padx=20)
 
         # Reloj en el contenedor derecho
-        self.clock_label = tk.Label(right_container, font=("Arial", 12), bg="#00E201", fg="white")
+        self.clock_label = tk.Label(right_container, font=("roboto", 20), bg="#00E201", fg="white")
         self.clock_label.pack(side=tk.RIGHT, padx=10)
         self.update_clock()
         
@@ -75,13 +76,16 @@ class AdminPanel:
         style.configure("Treeview", font=("Arial", 11), rowheight=30, background="white", fieldbackground="white")
         style.map("Treeview", background=[("selected", "#00E201")], foreground=[("selected", "white")])
 
-        self.tree = ttk.Treeview(tree_frame, columns=("Turno", "DNI", "Motivo", "Estado", "Hora", "Ventanilla"), show="headings", height=10, yscrollcommand=scrollbar.set)
+        self.tree = ttk.Treeview(tree_frame, columns=("Turno", "DNI", "Nombres", "RUC", "Motivo", "Estado", "Hora", "Ventanilla"), show="headings", height=10, yscrollcommand=scrollbar.set)
         self.tree.heading("Turno", text="Turno")
         self.tree.heading("DNI", text="DNI")
+        self.tree.heading("Nombres", text="Nombres")  # Nueva columna de Nombres
+        self.tree.heading("RUC", text="RUC")  # Nueva columna de RUC
         self.tree.heading("Motivo", text="Motivo")
         self.tree.heading("Estado", text="Estado")
         self.tree.heading("Hora", text="Hora")
         self.tree.heading("Ventanilla", text="Ventanilla")
+
 
         self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.config(command=self.tree.yview)
@@ -91,7 +95,7 @@ class AdminPanel:
 
 
 
-        completed_label = tk.Label(bottom_frame, text="Completados", font=("Arial", 12, "bold"), bg="#F8F8F8", fg="#333333")
+        completed_label = tk.Label(bottom_frame, text="Turnos Completados", font=("Arial", 12, "bold"), bg="#F8F8F8", fg="#333333")
         completed_label.grid(row=0, column=0, padx=10, pady=5, sticky="w")
         completed_frame = tk.Frame(bottom_frame)
         completed_frame.grid(row=1, column=0, padx=10, pady=5, sticky="nsew")
@@ -99,13 +103,14 @@ class AdminPanel:
         completed_scroll = tk.Scrollbar(completed_frame)
         completed_scroll.pack(side=tk.RIGHT, fill=tk.Y)
         
-        self.completed_tree = ttk.Treeview(completed_frame, columns=("Turno", "DNI", "Hora Atención", "Hora Término"), 
-                                         show="headings", height=5, yscrollcommand=completed_scroll.set)
+        self.completed_tree = ttk.Treeview(completed_frame, 
+            columns=("Turno", "DNI", "Nombres", "RUC", "Hora Inicio", "Hora Término"), 
+            show="headings", height=5, yscrollcommand=completed_scroll.set)
         self.completed_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         completed_scroll.config(command=self.completed_tree.yview)
 
-        # Modificación de la tabla de cancelados con scrollbar
-        cancelled_label = tk.Label(bottom_frame, text="Cancelados", font=("Arial", 12, "bold"), bg="#F8F8F8", fg="#333333")
+        # ModificaciÃ³n de la tabla de cancelados con scrollbar
+        cancelled_label = tk.Label(bottom_frame, text="Turnos Cancelados", font=("Arial", 12, "bold"), bg="#F8F8F8", fg="#333333")
         cancelled_label.grid(row=0, column=1, padx=10, pady=5, sticky="w")        
         cancelled_frame = tk.Frame(bottom_frame)
         cancelled_frame.grid(row=1, column=1, padx=10, pady=5, sticky="nsew")
@@ -113,17 +118,18 @@ class AdminPanel:
         cancelled_scroll = tk.Scrollbar(cancelled_frame)
         cancelled_scroll.pack(side=tk.RIGHT, fill=tk.Y)
         
-        self.cancelled_tree = ttk.Treeview(cancelled_frame, columns=("Turno", "DNI", "Motivo"), 
-                                         show="headings", height=5, yscrollcommand=cancelled_scroll.set)
+        self.cancelled_tree = ttk.Treeview(cancelled_frame, 
+            columns=("Turno", "DNI", "Nombres", "RUC", "Motivo"), 
+            show="headings", height=5, yscrollcommand=cancelled_scroll.set)
         self.cancelled_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         cancelled_scroll.config(command=self.cancelled_tree.yview)
 
-        # Configuración de los encabezados de las tablas
-        for col in ("Turno", "DNI", "Hora Atención", "Hora Término"):
+        # ConfiguraciÃ³n de los encabezados de las tablas
+        for col in ("Turno", "DNI", "Nombres", "RUC", "Hora Inicio", "Hora Término"):
             self.completed_tree.heading(col, text=col)
             self.completed_tree.column(col, width=100)
 
-        for col in ("Turno", "DNI", "Motivo"):
+        for col in ("Turno", "DNI", "Nombres", "RUC", "Motivo"):
             self.cancelled_tree.heading(col, text=col)
             self.cancelled_tree.column(col, width=100)
 
@@ -163,74 +169,109 @@ class AdminPanel:
 
             self.root.destroy()  # Cierra la ventana actual
             new_root = tk.Tk()  # Crea una nueva instancia de Tkinter
-            menu_general.MenuGeneral(new_root)  # Llama al menú principal
+            menu_general.MenuGeneral(new_root)  # Llama al menÃº principal
             new_root.mainloop()  # Ejecuta el bucle principal de la nueva ventana
         except Exception as e:
-            messagebox.showerror("Error", f"No se pudo regresar al menú principal: {e}")
+            messagebox.showerror("Error", f"No se pudo regresar al menÃº principal: {e}")
 
     def cargar_turnos(self):
         connection = get_connection()
+
         if connection:
             try:
                 cursor = connection.cursor()
 
-                # Ordenar turnos según motivo y prioridad
+                # Cargar turnos pendientes con nombre y RUC
                 cursor.execute("""
                     SELECT 
-                        numero_turno, dni, motivo, estado, 
-                        TO_CHAR(fecha_hora, 'HH24:MI:SS') AS hora, ventanilla
-                    FROM turnos
-                    WHERE estado NOT IN ('completado', 'cancelado')
-                    ORDER BY 
+                        t.numero_turno, t.dni, 
+                        obtener_dni_ruc(t.dni) AS nombres,  -- Obtener nombres desde la funciÃ³n
                         CASE 
-                            WHEN motivo = 'Multas' THEN 1  -- Muy Alta
-                            WHEN motivo = 'Pagos' THEN 2  -- Alta
-                            WHEN motivo = 'Deudas' THEN 3 -- Media
-                            WHEN motivo = 'Documentos' THEN 4 -- Baja
-                            WHEN motivo = 'Consultas' THEN 5 -- Muy Baja
-                            ELSE 6
-                        END,
-                        fecha_hora ASC
+                            WHEN LENGTH(t.dni) = 11 THEN t.dni  -- Mostrar RUC solo si tiene 11 caracteres
+                            ELSE '-' 
+                        END AS ruc,
+                        t.motivo, t.estado, TO_CHAR(t.fecha_hora, 'HH24:MI:SS') AS hora, t.ventanilla
+                    FROM turnos t
+                    WHERE t.estado NOT IN ('completado', 'cancelado')
+                    ORDER BY t.fecha_hora ASC
                 """)
                 turnos = cursor.fetchall()
 
-                # Limpiar la tabla antes de cargar nuevos datos
+                # Limpiar la tabla de turnos pendientes
                 for item in self.tree.get_children():
                     self.tree.delete(item)
 
-                # Insertar turnos en la tabla
+                # Insertar los turnos pendientes en la tabla
                 for turno in turnos:
-                    self.tree.insert("", tk.END, values=turno)
+                    self.tree.insert("", tk.END, values=(
+                        turno[0], 
+                        turno[1], 
+                        turno[2] if turno[2] is not None else "-",  # Si no tiene nombre, colocar "-"
+                        turno[3] if turno[3] is not None else "-",  # Si no tiene RUC, colocar "-"
+                        turno[4], 
+                        turno[5], 
+                        turno[6], 
+                        turno[7]
+                    ))
 
                 # Cargar turnos completados
                 cursor.execute("""
                     SELECT numero_turno, dni, 
+                        obtener_dni_ruc(dni) AS nombres,  -- Obtener nombres desde la funciÃ³n
+                        CASE 
+                            WHEN LENGTH(dni) = 11 THEN dni  -- Mostrar RUC solo si tiene 11 caracteres
+                            ELSE '-' 
+                        END AS ruc,
                         TO_CHAR(hora_atencion, 'HH24:MI:SS'), 
                         TO_CHAR(hora_termino, 'HH24:MI:SS')
                     FROM turnos
                     WHERE estado = 'completado'
+                    ORDER BY hora_termino ASC  -- Ordenar por la hora de tÃ©rmino
                 """)
                 completados = cursor.fetchall()
 
+                # Limpiar la tabla de completados
                 for item in self.completed_tree.get_children():
                     self.completed_tree.delete(item)
 
+                # Insertar los turnos completados
                 for turno in completados:
-                    self.completed_tree.insert("", tk.END, values=turno)
+                    self.completed_tree.insert("", tk.END, values=(
+                        turno[0], 
+                        turno[1], 
+                        turno[2] if turno[2] is not None else "-",  # Si no tiene nombre, colocar "-"
+                        turno[3] if turno[3] is not None else "-",  # Si no tiene RUC, colocar "-"
+                        turno[4], 
+                        turno[5]
+                    ))
 
                 # Cargar turnos cancelados
                 cursor.execute("""
-                    SELECT numero_turno, dni, motivo
+                    SELECT numero_turno, dni, 
+                        obtener_dni_ruc(dni) AS nombres,  -- Obtener nombres desde la funciÃ³n
+                        CASE 
+                            WHEN LENGTH(dni) = 11 THEN dni  -- Mostrar RUC solo si tiene 11 caracteres
+                            ELSE '-' 
+                        END AS ruc,
+                        motivo
                     FROM turnos
                     WHERE estado = 'cancelado'
                 """)
                 cancelados = cursor.fetchall()
 
+                # Limpiar la tabla de cancelados
                 for item in self.cancelled_tree.get_children():
                     self.cancelled_tree.delete(item)
 
+                # Insertar los turnos cancelados
                 for turno in cancelados:
-                    self.cancelled_tree.insert("", tk.END, values=turno)
+                    self.cancelled_tree.insert("", tk.END, values=(
+                        turno[0], 
+                        turno[1], 
+                        turno[2] if turno[2] is not None else "-",  # Si no tiene nombre, colocar "-"
+                        turno[3] if turno[3] is not None else "-",  # Si no tiene RUC, colocar "-"
+                        turno[4]
+                    ))
 
             except Exception as e:
                 messagebox.showerror("Error", f"Error al cargar turnos: {e}")
@@ -262,8 +303,8 @@ class AdminPanel:
 
                 cursor.execute("UPDATE turnos SET estado = 'atendiendo', ventanilla = %s, hora_atencion = NOW() WHERE numero_turno = %s", (ventanilla[0], turno))
                 connection.commit()
-                self.turno_actual = turno  # Registrar turno en atención
-                messagebox.showinfo("Éxito", f"Turno {turno} asignado a la ventanilla {ventanilla[0]}.")
+                self.turno_actual = turno  # Registrar turno en atenciÃ³n
+                messagebox.showinfo("Ã‰xito", f"Turno {turno} asignado a la ventanilla {ventanilla[0]}.")
                 self.cargar_turnos()
             except Exception as e:
                 connection.rollback()
@@ -272,54 +313,71 @@ class AdminPanel:
                 cursor.close()
                 connection.close()
 
+
+                
+
     def siguiente_turno(self):
-        # Obtener el turno seleccionado
         selected_item = self.tree.selection()
         if not selected_item:
             messagebox.showwarning("Advertencia", "Seleccione un turno para completar.")
             return
 
         turno = self.tree.item(selected_item)["values"][0]
-
-        # Conexión a la base de datos
         connection = get_connection()
         if connection:
             try:
                 cursor = connection.cursor()
 
-                # Verificar el estado del turno en la base de datos
+                # Verificar el estado del turno
                 cursor.execute("SELECT estado FROM turnos WHERE numero_turno = %s", (turno,))
                 estado = cursor.fetchone()
 
-                if not estado:
-                    messagebox.showerror("Error", f"El turno {turno} no existe.")
+                if not estado or estado[0] != "atendiendo":
+                    messagebox.showwarning("Advertencia", "El turno debe estar en estado 'atendiendo'.")
                     return
 
-                # Si el estado no es "atendiendo", mostrar advertencia
-                if estado[0] != "atendiendo":
-                    messagebox.showwarning(
-                        "Advertencia",
-                        f"El turno {turno} debe estar en estado 'atendiendo' para poder completarse."
-                    )
-                    return
-
-                # Marcar el turno como completado
+                # Marcar turno actual como completado
                 cursor.execute(
                     "UPDATE turnos SET estado = 'completado', hora_termino = NOW() WHERE numero_turno = %s",
                     (turno,)
                 )
-                connection.commit()
 
-                # Confirmar éxito
-                messagebox.showinfo("Éxito", f"Turno {turno} completado.")
+                # Buscar y llamar automáticamente al próximo turno más antiguo
+                cursor.execute("""
+                    SELECT numero_turno, ventanilla 
+                    FROM turnos 
+                    WHERE estado NOT IN ('completado', 'cancelado', 'atendiendo') 
+                    ORDER BY fecha_hora ASC 
+                    LIMIT 1
+                """)
+                next_turno = cursor.fetchone()
+
+                if next_turno:
+                    # Seleccionar ventanilla actual
+                    cursor.execute("SELECT ventanilla FROM turnos WHERE numero_turno = %s", (turno,))
+                    ventanilla_actual = cursor.fetchone()[0]
+
+                    # Asignar el próximo turno a la misma ventanilla
+                    cursor.execute(
+                        "UPDATE turnos SET estado = 'atendiendo', ventanilla = %s, hora_atencion = NOW() WHERE numero_turno = %s", 
+                        (ventanilla_actual, next_turno[0])
+                    )
+                    connection.commit()
+                    messagebox.showinfo("Información", f"Turno {turno} completado. Siguiente turno {next_turno[0]} llamado automáticamente.")
+                else:
+                    connection.commit()
+                    messagebox.showinfo("Información", f"Turno {turno} completado. No hay más turnos pendientes.")
+
                 self.cargar_turnos()
 
             except Exception as e:
                 connection.rollback()
-                messagebox.showerror("Error", f"Error al completar turno: {e}")
+                messagebox.showerror("Error", f"Error al procesar turno: {e}")
             finally:
                 cursor.close()
                 connection.close()
+
+
 
 
     def cancelar_turno(self):
@@ -338,12 +396,12 @@ class AdminPanel:
                 estado = cursor.fetchone()
 
                 if not estado or estado[0] != "atendiendo":
-                    messagebox.showwarning("Advertencia", "Solo se pueden cancelar turnos que estén en estado 'atendiendo'.")
+                    messagebox.showwarning("Advertencia", "Solo se pueden cancelar turnos que estÃ©n en estado 'atendiendo'.")
                     return
 
                 cursor.execute("UPDATE turnos SET estado = 'cancelado' WHERE numero_turno = %s", (turno,))
                 connection.commit()
-                messagebox.showinfo("Éxito", f"Turno {turno} cancelado.")
+                messagebox.showinfo("Ã‰xito", f"Turno {turno} cancelado.")
                 self.cargar_turnos()
             except Exception as e:
                 connection.rollback()
@@ -351,6 +409,8 @@ class AdminPanel:
             finally:
                 cursor.close()
                 connection.close()
+
+
 
 if __name__ == "__main__":
     root = tk.Tk()
