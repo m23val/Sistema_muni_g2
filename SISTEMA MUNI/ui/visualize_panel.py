@@ -206,11 +206,11 @@ class VisualizePanel:
             try:
                 cursor = connection.cursor()
                 # Consulta para turno actual
-                cursor.execute("SELECT numero_turno, ventanilla, estado FROM turnos WHERE estado = 'atendiendo' LIMIT 1")
+                cursor.execute("SELECT numero_turno, ventanilla, nombres_empresa FROM turnos WHERE estado = 'atendiendo' LIMIT 1")
                 turno_actual = cursor.fetchone()
 
                 # Consulta para próximos turnos
-                cursor.execute("SELECT numero_turno, estado FROM turnos WHERE estado = 'espera' ORDER BY id ASC LIMIT 4")
+                cursor.execute("SELECT numero_turno, nombres_empresa FROM turnos WHERE estado = 'espera' ORDER BY id ASC LIMIT 4")
                 siguientes = cursor.fetchall()
 
                 # Actualizar turno actual

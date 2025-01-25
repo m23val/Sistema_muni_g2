@@ -19,20 +19,16 @@ class MainWindow:
         except Exception as e:
             print(f"Error al cargar el ícono: {e}")
 
-        # Franja superior
-        top_bar = tk.Frame(root, bg="#33669B")
-        top_bar.pack(side="top", anchor="w")
-
         # Marco principal
         main_frame = tk.Frame(root, bg="#FFFFFF")
-        main_frame.place(relx=0, rely=0.05, relwidth=1, relheight=0.9)
+        main_frame.place(relx=0, rely=0, relwidth=1.02, relheight=1)
 
         # Marco izquierdo para el logo, título y botones
         left_frame = tk.Frame(main_frame, bg="#FFFFFF")
         left_frame.pack(side="left", fill="both", expand=True, padx=20, pady=20)
 
         # Título
-        tk.Label(left_frame, text="GESTIÓN DE ###", font=("Arial", 18), bg="#FFFFFF").pack(pady=10)
+        tk.Label(left_frame, text="GESTIÓN DE TURNOS", font=("Sora SemiBold", 18), bg="#FFFFFF").pack(pady=10)
 
         # Logo
         try:
@@ -46,43 +42,46 @@ class MainWindow:
             print(f"Error al cargar la imagen del logo: {e}")
 
         # Título
-        tk.Label(left_frame, text="Seleccionar motivo:", font=("Arial", 18), bg="#FFFFFF").pack(pady=10)
+        tk.Label(left_frame, text="Seleccionar motivo:", font=("Sora Light", 18), bg="#FFFFFF").pack(pady=10)
 
         # Botones de opciones
         buttons_frame = tk.Frame(left_frame, bg="#FFFFFF")
         buttons_frame.pack(pady=20)
 
         self.motivo_info = {
-            "CONSULTAS": ("C", "Muy baja"),
-            "DEUDAS": ("S", "Media"),
-            "DOCUMENTOS": ("D", "Baja"),
-            "MULTAS": ("M", "Muy Alta"),
-            "PAGOS": ("P", "Alta"),
-            "OTROS": ("O", "Baja")  
+            "CONSULTAS": ("C"),
+            "DEUDAS": ("S"),
+            "DOCUMENTOS": ("D"),
+            "MULTAS": ("M"),
+            "PAGOS": ("P"),
+            "OTROS": ("O")  
         }
 
         # Declaramos una variable para almacenar el motivo seleccionado
         self.motivo_var = tk.StringVar()  # Esta será usada para almacenar el motivo seleccionado
-        
-
+    
         
         #for idx, (text, _) in enumerate(motivo):
-        for idx, (text, (prefijo, prioridad)) in enumerate(self.motivo_info.items()):
+        for idx, (text, (prefijo)) in enumerate(self.motivo_info.items()):
             btn = tk.Button(
                 buttons_frame,
                 text=text,
                 bg="#008000",
                 fg="white",
-                font=("Arial", 16),
-                width=28,
-                height=3,
+                font=("Sora SemiBold", 16, "bold"),
+                width=27,
+                height=2,
+                relief="flat",
                 command=lambda t=text: self.abrir_ventana_dni(t),
             )
             btn.grid(row=idx // 2, column=idx % 2, padx=20, pady=20)
+             # Efecto hover
+            btn.bind("<Enter>", lambda event, button=btn: button.config(bg="#45a049"))  # Cambio de color cuando el cursor entra
+            btn.bind("<Leave>", lambda event, button=btn: button.config(bg="#008000"))  # Vuelve a color original al salir
 
         # Marco derecho para la imagen adicional (Walter_S)
         right_frame = tk.Frame(main_frame, bg="#FFFFFF")
-        right_frame.pack(side="right", fill="y", expand=False, padx=0, pady=0)
+        right_frame.pack(side="right", fill="both", expand= True, padx=0, pady=0)
 
         # Función para ajustar la imagen adicional de Walter_S
         self.ajustar_imagen_walter(right_frame)
@@ -104,30 +103,32 @@ class MainWindow:
             additional_image = additional_image.resize((new_width, ventana_height), Image.Resampling.LANCZOS)
 
             # Obtener la altura y el ancho escalado de la imagen
-            image_width = additional_image.width
+            #image_width = additional_image.width
 
             # Cargar la imagen escalada
             self.additional_image = ImageTk.PhotoImage(additional_image)
             image_label = tk.Label(right_frame, image=self.additional_image, bg="#FFFFFF")
             image_label.pack(fill="both", expand=True, padx=0, pady=0)
-
+            
         except Exception as e:
             print(f"Error al cargar la imagen adicional: {e}")
 
-        # Establecer el ancho de la franja superior e inferior
-        ventana_width = self.root.winfo_screenwidth()  # Ancho total de la ventana
-        top_bar_width = ventana_width - image_width
-        top_bar = tk.Frame(self.root, bg="#33669B", height=25, width=top_bar_width)
-        top_bar.pack(side="top", anchor="w")
 
-        bottom_bar = tk.Frame(self.root, bg="#33669B", height=25, width=top_bar_width)
-        bottom_bar.pack(side="bottom", anchor="w")
+
+
+
+
+
+
+
+
+
 
     def abrir_ventana_dni(self, motivo):
         """Abre una nueva ventana para ingresar el DNI."""
         self.top = Toplevel(self.root)
         self.top.title("Ingresar DNI")
-        self.top.geometry("500x400")
+        self.top.geometry("600x500")
         self.top.configure(bg="#FFFFFF")
 
          # Establecer el ícono de la ventana emergente
@@ -137,10 +138,8 @@ class MainWindow:
         except Exception as e:
             print(f"Error al cargar el ícono en la ventana emergente: {e}")
 
-        
-
         # Mostrar el motivo
-        tk.Label(self.top, text=f"Motivo: {motivo}", font=("Arial", 16), bg="#FFFFFF").pack(pady=10)
+        tk.Label(self.top, text=f"Motivo: {motivo}", font=("Sora SemiBold", 16), bg="#FFFFFF").pack(pady=10)
 
         # Cargar y mostrar el logo entre los textos
         try:
@@ -154,40 +153,40 @@ class MainWindow:
         except Exception as e:
             print(f"Error al cargar el logo: {e}")
 
-        tk.Label(self.top, text="Ingrese su DNI:", font=("Arial", 14), bg="#FFFFFF").pack(pady=5)
-        self.dni_entry = tk.Entry(self.top, font=("Arial", 14))
-        self.dni_entry.pack(pady=10)
-        self.dni_entry.insert(0, "Ingrese su DNI")
-        self.dni_entry.bind("<FocusIn>", self.borrar_texto_dni)
-        self.dni_entry.bind("<FocusOut>", self.reemplazar_texto_dni)
+        tk.Label(self.top, text="Ingrese DNI o RUC:", font=("Sora Light", 14), bg="#FFFFFF").pack(pady=5)
+        self.dni_ruc_entry = tk.Entry(self.top, font=("Sora Light", 14))
+        self.dni_ruc_entry.pack(pady=10)
+        self.dni_ruc_entry.insert(0, "Ingrese DNI o RUC")
+        self.dni_ruc_entry.bind("<FocusIn>", self.borrar_texto_dni)
+        self.dni_ruc_entry.bind("<FocusOut>", self.reemplazar_texto_dni)
 
         # Botón para generar turno, pasando el motivo
-        prefijo, prioridad = self.motivo_info[motivo]
+        prefijo  = self.motivo_info[motivo]
         tk.Button(
             self.top,
             text="Generar Turno",
             bg="#008000",
             fg="white",
             font=("Arial", 14),
-            command=lambda: self.generar_turno(motivo, prefijo, prioridad),
+            command=lambda: self.generar_turno(motivo, prefijo),
         ).pack(pady=20)
 
 
     def borrar_texto_dni(self, event):
-        if self.dni_entry.get() == "Ingrese su DNI":
-            self.dni_entry.delete(0, tk.END)
+        if self.dni_ruc_entry.get() == "Ingrese DNI o RUC":
+            self.dni_ruc_entry.delete(0, tk.END)
 
     def reemplazar_texto_dni(self, event):
-        if self.dni_entry.get() == "":
-            self.dni_entry.insert(0, "Ingrese su DNI")
+        if self.dni_ruc_entry.get() == "":
+            self.dni_ruc_entry.insert(0, "Ingrese DNI o RUC")
 
-    def generar_turno(self, motivo, prefijo, prioridad):
-        dni = self.dni_entry.get()
+    def generar_turno(self, motivo, prefijo):
+        dni_ruc = self.dni_ruc_entry.get()
         #motivo = self.motivo_var.get()
 
         # Verificar que el DNI sea válido
-        if len(dni) != 8 or not dni.isdigit():
-            messagebox.showerror("Error", "DNI inválido")
+        if len(dni_ruc) != 8 and len(dni_ruc) != 11:  # Consideramos también RUC de 11 dígitos
+            messagebox.showerror("Error", "DNI o RUC inválido")
             return
         
         # Verificar si el motivo seleccionado es válido
@@ -201,22 +200,57 @@ class MainWindow:
 
         hora_actual = datetime.now().strftime("%H:%M:%S")  # Hora actual en formato HH:MM:SS
 
-        # Mensaje para conectar a la base de datos
-        print("Conectando a la base de datos...")
+
         connection = get_connection()
         if connection:
             try:
-                print(f"Conexión establecida, ejecutando consulta para obtener el siguiente número de turno con prefijo: {prefijo}")
                 cursor = connection.cursor()
-                numero_turno = self.obtener_siguiente_numero(cursor, prefijo)
-                print(f"Número de turno generado: {numero_turno}")
 
-                # Insertamos los datos del turno en la base de datos
+            
+                # Determinar si es un DNI o un RUC según la longitud del dni_ruc
+                if len(dni_ruc) == 8:
+                    # Si el valor tiene 8 dígitos, buscar en registros_dni
+                    cursor.execute("""
+                        SELECT dni, nombres FROM registros_dni WHERE dni = %s
+                    """, (dni_ruc,))
+                    result_dni = cursor.fetchone()
+
+                    if result_dni:
+                        nombre = result_dni[1]
+                        detalle = f"Nombre: {nombre}"
+                    else:
+                        # Si no se encuentra en registros_dni, mandar a registrar
+                        self.registrar_usuario(dni_ruc)
+                        return  # Detener el flujo si no se encuentra
+
+                elif len(dni_ruc) == 11:
+                    # Si el valor tiene 11 dígitos, buscar en registros_ruc
+                    cursor.execute("""
+                        SELECT ruc, empresa FROM registros_ruc WHERE ruc = %s
+                    """, (dni_ruc,))
+                    result_ruc = cursor.fetchone()
+
+                    if result_ruc:
+                        empresa = result_ruc[1]
+                        detalle = f"Empresa: {empresa}"
+                    else:
+                        # Si no se encuentra en registros_ruc, mandar a registrar
+                        self.registrar_usuario(dni_ruc)
+                        return  # Detener el flujo si no se encuentra
+
+                else:
+                    # Si el DNI/RUC no tiene ni 8 ni 11 dígitos, mostrar un error
+                    messagebox.showerror("Error", "DNI/RUC inválido.")
+                    
+                # Obtener el siguiente número de turno
+                numero_turno = self.obtener_siguiente_numero(cursor, prefijo)
+
+                # Insertar los datos del turno en la base de datos
                 cursor.execute("""
-                    INSERT INTO turnos (dni, numero_turno, estado, fecha_hora, prioridad, motivo) 
-                    VALUES (%s, %s, 'espera', CURRENT_TIMESTAMP, %s, %s) 
+                    INSERT INTO turnos (dni_ruc, numero_turno, estado, fecha_hora, motivo) 
+                    VALUES (%s, %s, 'espera', CURRENT_TIMESTAMP, %s) 
                     RETURNING numero_turno
-                """, (dni, numero_turno, prioridad, motivo))
+                """, (dni_ruc, numero_turno, motivo))
 
                 turno = cursor.fetchone()[0]
                 connection.commit()
@@ -230,7 +264,8 @@ class MainWindow:
                     f"----------------------------------------------\n"
                     f"Turno: {turno}\n"
                     f"Motivo: {motivo}\n"
-                    f"DNI: {dni}\n"
+                    f"{detalle}\n"  # Muestra el nombre o la empresa
+                    f"DNI/RUC: {dni_ruc}\n"
                     f"Hora: {hora_actual}\n"
                     f"----------------------------------------------\n"
                     f"Por favor espere su turno.\n"
@@ -239,8 +274,8 @@ class MainWindow:
                 messagebox.showinfo("Turno Generado", mensaje)
 
                 # Limpiar el campo de DNI
-                self.dni_entry.delete(0, tk.END)
-                self.dni_entry.insert(0, "Ingrese su DNI")
+                self.dni_ruc_entry.delete(0, tk.END)
+                self.dni_ruc_entry.insert(0, "Ingrese su DNI o RUC")
 
             except Exception as e:
                 connection.rollback()
@@ -251,6 +286,169 @@ class MainWindow:
                 connection.close()
         else:
             messagebox.showerror("Error", "No se pudo conectar a la base de datos")
+
+
+
+    def registrar_usuario(self, dni):
+        """Esta función será llamada cuando el DNI o RUC no se encuentre en la base de datos y el usuario deba registrarse."""
+        self.top_registro = Toplevel(self.root)
+        self.top_registro.title("Registrar Usuario")
+        self.top_registro.geometry("600x500")
+        self.top_registro.configure(bg="#FFFFFF")
+
+        # Título
+        tk.Label(self.top_registro, text="Registro de Usuario", font=("Sora SemiBold", 16), bg="#FFFFFF").pack(pady=10)
+
+        # Opción para elegir DNI o RUC
+        self.tipo_id_var = tk.StringVar(value="dni")
+
+        tk.Radiobutton(self.top_registro, text="DNI", variable=self.tipo_id_var, value="dni", font=("Sora Light", 14), bg="#FFFFFF").pack(pady=10)
+        tk.Radiobutton(self.top_registro, text="RUC", variable=self.tipo_id_var, value="ruc", font=("Sora Light", 14), bg="#FFFFFF").pack(pady=10)
+
+        # Botón para proceder al formulario dependiendo de la elección
+        tk.Button(
+            self.top_registro,
+            text="Siguiente",
+            bg="#008000",
+            fg="white",
+            font=("Arial", 14),
+            command=self.mostrar_formulario_registro
+        ).pack(pady=20)
+
+    def mostrar_formulario_registro(self):
+        """Muestra el formulario de acuerdo al tipo de documento (DNI o RUC)."""
+        tipo_id = self.tipo_id_var.get()
+
+        # Limpiar la ventana de registro
+        for widget in self.top_registro.winfo_children():
+            widget.destroy()
+
+        # Título
+        tk.Label(self.top_registro, text="Registro de Usuario", font=("Sora SemiBold", 16), bg="#FFFFFF").pack(pady=10)
+
+        if tipo_id == "dni":
+            # Campos para ingresar dni, apellidos y nombres
+            tk.Label(self.top_registro, text="Ingrese su DNI:", font=("Sora Light", 14), bg="#FFFFFF").pack(pady=5)
+            self.dni_entry = tk.Entry(self.top_registro, font=("Sora Light", 14))
+            self.dni_entry.pack(pady=10)
+
+            tk.Label(self.top_registro, text="Ingrese sus apellidos:", font=("Sora Light", 14), bg="#FFFFFF").pack(pady=5)
+            self.apellido_entry = tk.Entry(self.top_registro, font=("Sora Light", 14))
+            self.apellido_entry.pack(pady=10)
+
+            tk.Label(self.top_registro, text="Ingrese sus nombres:", font=("Sora Light", 14), bg="#FFFFFF").pack(pady=5)
+            self.nombre_entry = tk.Entry(self.top_registro, font=("Sora Light", 14))
+            self.nombre_entry.pack(pady=10)
+
+        elif tipo_id == "ruc":
+            # Campo para ingresar el ruc y nombre de la empresa
+            tk.Label(self.top_registro, text="Ingrese su RUC:", font=("Sora Light", 14), bg="#FFFFFF").pack(pady=5)
+            self.ruc_entry = tk.Entry(self.top_registro, font=("Sora Light", 14))
+            self.ruc_entry.pack(pady=10)
+
+            tk.Label(self.top_registro, text="Ingrese el nombre de su empresa:", font=("Sora Light", 14), bg="#FFFFFF").pack(pady=5)
+            self.empresa_entry = tk.Entry(self.top_registro, font=("Sora Light", 14))
+            self.empresa_entry.pack(pady=10)
+
+        # Botón para registrar
+        tk.Button(
+            self.top_registro,
+            text="Registrar",
+            bg="#008000",
+            fg="white",
+            font=("Arial", 14),
+            #command=lambda: self.guardar_registro_usuario(self.dni_ruc_entry.get())
+            command=self.guardar_registro_usuario
+        ).pack(pady=20)
+
+    def guardar_registro_usuario(self):
+        """Guardar el nuevo registro en la base de datos."""
+        tipo_id = self.tipo_id_var.get()
+        
+        if tipo_id == "dni":
+            dni = self.dni_entry.get()
+            apellido = self.apellido_entry.get()
+            nombre = self.nombre_entry.get()
+            nombres_completos = f"{apellido} {nombre}"  # Concatenar apellido y nombre para el DNI
+
+            tabla = "registros_dni"
+            columna_id = "dni"
+            columna_nombres = "nombres"
+
+            # Validar que el campo de apellidos y nombres no esté vacío
+            if not apellido or not nombre:
+                messagebox.showerror("Error", "Por favor ingrese los apellidos y nombres.")
+                return
+
+        elif tipo_id == "ruc":
+            ruc = self.ruc_entry.get()
+            empresa = self.empresa_entry.get()
+
+            tabla = "registros_ruc"
+            columna_id = "ruc"
+            columna_nombres = "empresa"
+
+            # Validar que el campo de empresa no esté vacío
+            if not empresa:
+                messagebox.showerror("Error", "Por favor ingrese el nombre de la empresa.")
+                return
+
+        # Realizar la inserción en la base de datos
+        connection = get_connection()
+        if connection:
+            try:
+                cursor = connection.cursor()
+
+                if tipo_id == "dni":
+                    # Insertar en la tabla de registros_dni
+
+                    cursor.execute(f"""
+                                   
+                        INSERT INTO registros_dni (dni, nombres)
+                        VALUES (%s, %s)
+                    """, (dni, nombres_completos))
+
+                elif tipo_id == "ruc":
+                    # Insertar en la tabla de registros_ruc
+                    cursor.execute(f"""
+                        INSERT INTO registros_ruc (ruc, empresa)
+                        VALUES (%s, %s)
+                    """, (ruc, empresa))
+
+                connection.commit()
+
+                messagebox.showinfo("Registro Exitoso", "¡Su registro fue exitoso!")
+                self.top_registro.destroy()  # Cerrar ventana de registro
+
+            except Exception as e:
+                connection.rollback()
+                print(f"Error al registrar usuario: {e}")
+                messagebox.showerror("Error", f"Error al registrar usuario: {e}")
+            finally:
+                cursor.close()
+                connection.close()
+        else:
+            messagebox.showerror("Error", "No se pudo conectar a la base de datos")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    
+
+
+
+    
 
 
     def obtener_siguiente_numero(self, cursor, prefijo):
