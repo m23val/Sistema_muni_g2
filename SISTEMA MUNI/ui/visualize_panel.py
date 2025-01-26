@@ -115,9 +115,6 @@ class VisualizePanel:
 
         # Próximos turnos con bordes personalizados ################################################################################### FONDO PARA LA TABLA DE SIGUIENTES TURNOS
 
-        #self.siguientes_background = tk.Frame(root, bg="#E4E4E4")
-        #self.siguientes_background.place(relx=0.63, rely=0, relwidth=4, relheight=1)  # Ocupa toda la parte derecha
-
         self.siguientes_frame = tk.Frame(root, bg="#E4E4E4")
         self.siguientes_frame.place(relx=0.67, rely=0.08, relwidth=0.3, relheight=0.85)  # Ocupa toda la parte derecha
 
@@ -155,9 +152,11 @@ class VisualizePanel:
             estado_label = tk.Label(
                 turno_frame,
                 text="--",  # Texto inicial vacío, se actualizará dinámicamente
-                font=("Arial", 14, "italic"),
+                font=("Arial", 12, "italic"),
                 bg="#49A11A",
-                fg="#FFFFFF",  # Color a juego con el borde
+                justify="center",
+                wraplength=480,
+                fg="#FFFFFF"  # Color a juego con el borde
             )
             estado_label.place(relx=0.5, rely=0.8, anchor="center")  # Posicionado encima del borde
 
@@ -180,9 +179,11 @@ class VisualizePanel:
             font=("Arial", 40, "bold"),
             bg="#49A11A",
             fg="#000000",
-            anchor="center"
+            anchor="center",
+            justify="center",
+            wraplength=500
         )
-        self.nombre_label.place(relx=0.1, rely=0.2, relwidth=0.8, relheight=0.6)
+        self.nombre_label.place(relx=0.05, rely=0.1, relwidth=0.9, relheight=0.7)
 
         # Actualizar datos
         self.cargar_turnos()
@@ -206,7 +207,7 @@ class VisualizePanel:
             try:
                 cursor = connection.cursor()
                 # Consulta para turno actual
-                cursor.execute("SELECT numero_turno, ventanilla, nombres_empresa FROM turnos WHERE estado = 'atendiendo' LIMIT 1")
+                cursor.execute("SELECT numero_turno, ventanilla, nombres_empresa FROM turnos WHERE estado = 'atendiendo' ORDER BY hora_atencion DESC LIMIT 1")
                 turno_actual = cursor.fetchone()
 
                 # Consulta para próximos turnos

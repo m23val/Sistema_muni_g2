@@ -16,7 +16,7 @@ class AdminPanel:
 
         # Ãcono de la ventana
         try:
-            icon_path = "C:/Users/Max/Desktop/Sistema_muni_g2-main/assets/logo.ico"
+            icon_path = "C:/Users/marie/OneDrive/Escritorio/SISTEMA/Sistema_muni_g2/assets/logo.ico"
             self.root.iconbitmap(icon_path)
         except Exception as e:
             print(f"Error al cargar el ícono de la ventana: {e}")
@@ -28,7 +28,7 @@ class AdminPanel:
         
 
         try:
-            image_path = "C:/Users/Max/Desktop/Sistema_muni_g2-main/assets/logo_completo.png"
+            image_path = "C:/Users/marie/OneDrive/Escritorio/SISTEMA/Sistema_muni_g2/assets/logo_completo.png"
             image = Image.open(image_path).resize((250, 80), Image.Resampling.LANCZOS)
             self.logo = ImageTk.PhotoImage(image)
         except Exception as e:
@@ -38,7 +38,7 @@ class AdminPanel:
         logo_label.pack(side=tk.LEFT, padx=20, pady=12)
 
         try:
-            image_path_admin = "C:/Users/Max/Desktop/Sistema_muni_g2-main/assets/admin.png"
+            image_path_admin = "C:/Users/marie/OneDrive/Escritorio/SISTEMA/Sistema_muni_g2/assets/admin.png"
             image_admin = Image.open(image_path_admin).resize((30, 30), Image.Resampling.LANCZOS)
             self.logo_admin = ImageTk.PhotoImage(image_admin)
         except Exception as e:
@@ -163,7 +163,7 @@ class AdminPanel:
     def regresar(self):
         try:
             import importlib.util
-            spec = importlib.util.spec_from_file_location("menu_general", r"C:\Users\Max\Desktop\Sistema_muni_g2-main\SISTEMA MUNI\ui\menu_general.py")
+            spec = importlib.util.spec_from_file_location("menu_general", r"C:\Users\marie\OneDrive\Escritorio\SISTEMA\Sistema_muni_g2\SISTEMA MUNI\ui\menu_general.py")
             menu_general = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(menu_general)
 
@@ -184,10 +184,10 @@ class AdminPanel:
                 # Cargar turnos pendientes con nombre y RUC
                 cursor.execute("""
                     SELECT 
-                        t.numero_turno, t.dni, 
-                        obtener_dni_ruc(t.dni) AS nombres,  -- Obtener nombres desde la funciÃ³n
+                        t.numero_turno, t.dni_ruc, 
+                        t.nombres_empresa AS nombres,  
                         CASE 
-                            WHEN LENGTH(t.dni) = 11 THEN t.dni  -- Mostrar RUC solo si tiene 11 caracteres
+                            WHEN LENGTH(t.dni_ruc) = 11 THEN t.dni_ruc 
                             ELSE '-' 
                         END AS ruc,
                         t.motivo, t.estado, TO_CHAR(t.fecha_hora, 'HH24:MI:SS') AS hora, t.ventanilla
@@ -216,10 +216,10 @@ class AdminPanel:
 
                 # Cargar turnos completados
                 cursor.execute("""
-                    SELECT numero_turno, dni, 
-                        obtener_dni_ruc(dni) AS nombres,  -- Obtener nombres desde la funciÃ³n
+                    SELECT numero_turno, dni_ruc, 
+                        nombres_empresa AS nombres,  -- Obtener nombres desde la funciÃ³n
                         CASE 
-                            WHEN LENGTH(dni) = 11 THEN dni  -- Mostrar RUC solo si tiene 11 caracteres
+                            WHEN LENGTH(dni_ruc) = 11 THEN dni_ruc  -- Mostrar RUC solo si tiene 11 caracteres
                             ELSE '-' 
                         END AS ruc,
                         TO_CHAR(hora_atencion, 'HH24:MI:SS'), 
@@ -247,10 +247,10 @@ class AdminPanel:
 
                 # Cargar turnos cancelados
                 cursor.execute("""
-                    SELECT numero_turno, dni, 
-                        obtener_dni_ruc(dni) AS nombres,  -- Obtener nombres desde la funciÃ³n
+                    SELECT numero_turno, dni_ruc, 
+                        nombres_empresa AS nombres,  -- Obtener nombres desde la funciÃ³n
                         CASE 
-                            WHEN LENGTH(dni) = 11 THEN dni  -- Mostrar RUC solo si tiene 11 caracteres
+                            WHEN LENGTH(dni_ruc) = 11 THEN dni_ruc  -- Mostrar RUC solo si tiene 11 caracteres
                             ELSE '-' 
                         END AS ruc,
                         motivo
