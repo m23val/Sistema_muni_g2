@@ -4,7 +4,7 @@ from db.connection import get_connection
 from PIL import Image, ImageTk
 import time
 from threading import Thread
-
+from datetime import datetime
 
 class AdminPanel:
     def __init__(self, root):
@@ -64,7 +64,7 @@ class AdminPanel:
         regresar_button = tk.Button(header_frame, text="Regresar", font=("Arial", 12, "bold"), bg="#FF8000", fg="white", command=self.regresar, padx=10, pady=5)
         regresar_button.pack(side=tk.LEFT, padx=20)
 
-        tk.Label(root, text="Atención", font=("Arial", 16, "bold"), bg="#F8F8F8", fg="#333333").pack(pady=10)
+        tk.Label(root, text="Atención al ciudadano", font=("Arial", 16, "bold"), bg="#F8F8F8", fg="#333333").pack(pady=10)
 
         tree_frame = tk.Frame(root)
         tree_frame.pack(pady=20, padx=20, fill=tk.BOTH, expand=True)
@@ -119,54 +119,87 @@ class AdminPanel:
         completed_scroll.config(command=self.completed_tree.yview)
 
 
-        ver_cancelados_button = tk.Button(
-             root,
-             text="Ver Turnos\nCancelados",
-             font=("Arial", 10,"bold"),
-             bg="#FF4444",
-             fg="white",
-             command=self.mostrar_cancelados,
-             padx=10,
-             pady=5
-         )
-        ver_cancelados_button.place(relx=0.95,rely=0.67 ,anchor="e")
-
-        
-
+    
          # Configurar las columnas del marco inferior para que ambas tablas ocupen el mismo espacio
         bottom_frame.grid_columnconfigure(0 ,weight=1)  # Para la tabla completados
 
         button_frame = tk.Frame(root,bg="#F8F8F8")
         button_frame.pack(pady=10 ,side=tk.BOTTOM)
 
+
+        try:
+            siguiente_icon = Image.open("C:/Users/Max/Desktop/Sistema_muni_g2-main/assets/siguiente.png").resize((20, 20), Image.Resampling.LANCZOS)
+            llamar_icon = Image.open("C:/Users/Max/Desktop/Sistema_muni_g2-main/assets/llamar.png").resize((20, 20), Image.Resampling.LANCZOS)
+            cancelar_icon = Image.open("C:/Users/Max/Desktop/Sistema_muni_g2-main/assets/cancelar.png").resize((20, 20), Image.Resampling.LANCZOS)
+
+            self.siguiente_icon_image = ImageTk.PhotoImage(siguiente_icon)
+            self.llamar_icon_image = ImageTk.PhotoImage(llamar_icon)
+            self.cancelar_icon_image = ImageTk.PhotoImage(cancelar_icon)
+
+        except Exception as e:
+            print(f"Error al cargar los íconos: {e}")
+
+
+
+        # Botón para ver turnos cancelados con solo un ícono
+        try:
+             cancelados_icon_path = r"C:/Users/Max/Desktop/Sistema_muni_g2-main/assets/cancelados.png"  # Asegúrate de que la ruta sea correcta
+             cancelados_icon_image = Image.open(cancelados_icon_path).resize((50, 50), Image.Resampling.LANCZOS)  # Ajusta el tamaño según sea necesario
+             self.cancelados_icon_photo = ImageTk.PhotoImage(cancelados_icon_image)
+        except Exception as e:
+             print(f"Error al cargar el ícono de cancelados: {e}")
+
+        
+
+
+        ver_cancelados_button = tk.Button(
+                    root,
+                    image=self.cancelados_icon_photo,
+                    command=self.mostrar_cancelados,
+                    bg="white",
+                    borderwidth=0  # Sin borde para que se vea más limpio
+                )
+        ver_cancelados_button.place(relx=0.95,rely=0.67 ,anchor="e")
+
+        button_frame = tk.Frame(root,bg="#F8F8F8")
+        button_frame.pack(pady=10 ,side=tk.BOTTOM)
+
+
         siguiente_button = tk.Button(button_frame,
-             text="Siguiente",
-             font=("Arial" ,12,"bold"),
-             bg="#0000FF",
-             fg="white",
-             command=self.siguiente_turno,
-             padx=10,
-             pady=5)
-        siguiente_button.grid(row=0,column=0,padx=15)
+                                     text="Siguiente",
+                                     font=("Arial", 12, "bold"),
+                                     bg="#0000FF",
+                                     fg="white",
+                                     command=self.siguiente_turno,
+                                     padx=10,
+                                     pady=5,
+                                     image=self.siguiente_icon_image,
+                                     compound=tk.LEFT)  # Coloca el icono a la izquierda del texto
+        siguiente_button.grid(row=0, column=0, padx=15)
 
         llamar_button = tk.Button(button_frame,
-             text="Llamar",
-             font=("Arial" ,12,"bold"),
-             bg="#008000",
-             fg="white",
-             command=self.llamar_turno,
-             padx=10,
-             pady=5)
-        llamar_button.grid(row=0,column=1,padx=15)
+                                  text="Llamar",
+                                  font=("Arial", 12, "bold"),
+                                  bg="#008000",
+                                  fg="white",
+                                  command=self.llamar_turno,
+                                  padx=10,
+                                  pady=5,
+                                  image=self.llamar_icon_image,
+                                  compound=tk.LEFT)  # Coloca el icono a la izquierda del texto
+        llamar_button.grid(row=0, column=1, padx=15)
 
         cancelar_button = tk.Button(button_frame,
-             text="Cancelar",
-             font=("Arial" ,12,"bold"),
-             bg="#FF0000",
-             fg="white",
-             command=self.cancelar_turno,
-             padx=10,
-             pady=5)
+                text="Cancelar",
+                font=("Arial" ,12,"bold"),
+                bg="#FF0000",
+                fg="white",
+                command=self.cancelar_turno,
+                padx=10,
+                pady=5,
+                image=self.cancelar_icon_image,
+                compound=tk.LEFT) 
+        
         cancelar_button.grid(row=0,column=2,padx=15)
 
         self.cargar_turnos()
@@ -238,7 +271,7 @@ class AdminPanel:
                         self.tree.item(item_id, tags=('atendiendo',))
 
                 # Configurar el estilo para resaltar filas
-                self.tree.tag_configure('atendiendo', background='#B2E0E0')  # Color celeste pastel
+                self.tree.tag_configure('atendiendo', background='#F4ED73')  # Color celeste pastel
 
                 # Cargar turnos completados
                 cursor.execute("""
