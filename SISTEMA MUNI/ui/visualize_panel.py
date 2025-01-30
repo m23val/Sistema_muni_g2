@@ -176,14 +176,14 @@ class VisualizePanel:
         self.nombre_label = tk.Label(
             self.footer_frame,
             text="--",
-            font=("Arial", 40, "bold"),
+            font=("Arial", 35, "bold"), #25 por si los nombres son muy largos      30 para los nombres con longitud normal 
             bg="#49A11A",
             fg="#000000",
             anchor="center",
             justify="center",
             wraplength=500
         )
-        self.nombre_label.place(relx=0.05, rely=0.1, relwidth=0.9, relheight=0.7)
+        self.nombre_label.place(relx=0, rely=0, relwidth=1, relheight=1)
 
         # Actualizar datos
         self.cargar_turnos()
@@ -207,11 +207,11 @@ class VisualizePanel:
             try:
                 cursor = connection.cursor()
                 # Consulta para turno actual
-                cursor.execute("SELECT numero_turno, ventanilla, nombres_empresa FROM turnos WHERE estado = 'atendiendo' ORDER BY hora_atencion DESC LIMIT 1")
+                cursor.execute("SELECT TOP 1 numero_turno, ventanilla, nombres_empresa FROM turnos WHERE estado = 'atendiendo' ORDER BY hora_atencion DESC")
                 turno_actual = cursor.fetchone()
 
                 # Consulta para próximos turnos
-                cursor.execute("SELECT numero_turno, nombres_empresa FROM turnos WHERE estado = 'espera' ORDER BY id ASC LIMIT 4")
+                cursor.execute("SELECT TOP 4 numero_turno, nombres_empresa FROM turnos WHERE estado = 'espera' ORDER BY id ASC")
                 siguientes = cursor.fetchall()
 
                 # Actualizar turno actual

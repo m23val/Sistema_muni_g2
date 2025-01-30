@@ -93,7 +93,7 @@ class MainWindow:
 
             # Obtener la altura y ancho total de la ventana
             ventana_height = self.root.winfo_screenheight()  # Altura de la pantalla
-            ventana_width = self.root.winfo_screenwidth()  # Ancho total de la ventana
+            #ventana_width = self.root.winfo_screenwidth()  # Ancho total de la ventana
 
             # Nueva altura para la imagen (altura de la ventana)
             aspect_ratio = additional_image.width / additional_image.height
@@ -112,16 +112,8 @@ class MainWindow:
             
         except Exception as e:
             print(f"Error al cargar la imagen adicional: {e}")
-
-
-
-
-
-
-
-
-
-
+    
+ 
 
 
     def abrir_ventana_dni(self, motivo):
@@ -211,7 +203,7 @@ class MainWindow:
                 if len(dni_ruc) == 8:
                     # Si el valor tiene 8 dígitos, buscar en registros_dni
                     cursor.execute("""
-                        SELECT dni, nombres FROM registros_dni WHERE dni = %s
+                        SELECT dni, nombres FROM registros_dni WHERE dni = ?
                     """, (dni_ruc,))
                     result_dni = cursor.fetchone()
 
@@ -226,7 +218,7 @@ class MainWindow:
                 elif len(dni_ruc) == 11:
                     # Si el valor tiene 11 dígitos, buscar en registros_ruc
                     cursor.execute("""
-                        SELECT ruc, empresa FROM registros_ruc WHERE ruc = %s
+                        SELECT ruc, empresa FROM registros_ruc WHERE ruc = ?
                     """, (dni_ruc,))
                     result_ruc = cursor.fetchone()
 
@@ -244,16 +236,34 @@ class MainWindow:
                     
                 # Obtener el siguiente número de turno
                 numero_turno = self.obtener_siguiente_numero(cursor, prefijo)
+                
 
-                # Insertar los datos del turno en la base de datos
+
+                # Insertar los datos del turno en la base de datos (con OUTPUT para obtener el numero_turno)
+                # Crear una tabla temporal para capturar el valor del OUTPUT
                 cursor.execute("""
-                    INSERT INTO turnos (dni_ruc, numero_turno, estado, fecha_hora, motivo) 
-                    VALUES (%s, %s, 'espera', CURRENT_TIMESTAMP, %s) 
-                    RETURNING numero_turno
-                """, (dni_ruc, numero_turno, motivo))
+                     INSERT INTO turnos (dni_ruc, numero_turno, estado, fecha_hora, motivo) 
+                     VALUES (?, ?, 'espera', CURRENT_TIMESTAMP, ?);
+                 """, (dni_ruc, numero_turno, motivo))
+                
 
-                turno = cursor.fetchone()[0]
-                connection.commit()
+                # Ahora, consulta el número de turno que fue generado
+                cursor.execute("""
+                    SELECT TOP 1 numero_turno FROM turnos 
+                    WHERE dni_ruc = ? 
+                    AND CONVERT(VARCHAR(MAX), motivo) = ?
+                    ORDER BY id DESC;
+                """, (dni_ruc, motivo))
+
+
+                turno = cursor.fetchone()
+                if turno:
+                    turno = turno[0]
+                    connection.commit()  # Confirmar la transacción
+                    print(f"Turno generado: {turno}")
+                else:
+                    print("No se pudo obtener el número de turno")
+
 
                 print(f"Turno generado exitosamente: {turno}")
 
@@ -286,6 +296,49 @@ class MainWindow:
                 connection.close()
         else:
             messagebox.showerror("Error", "No se pudo conectar a la base de datos")
+
+
+
+    ###################################
+
+
+    def abrir_ventana_motivo_especifico(self, motivo):
+        """Abre una nueva ventana para seleccionar el motivo específico."""
+        self.top_motivo = Toplevel(self.root)
+        self.top_motivo.title("Seleccionar Motivo Específico")
+        self.top_motivo.geometry("600x500")
+        self.top_motivo.configure(bg="#FFFFFF")
+
+        # Título
+        tk.Label(self.top_motivo, text=f"Motivo General: {motivo}", font=("Sora SemiBold", 16), bg="#FFFFFF").pack(pady=10)
+
+        # Opciones de motivo específico
+        opciones = [
+            "Opción 1", "Opción 2", "Opción 3", 
+            "Opción 4", "Opción 5", "Opción 6"
+        ]
+        
+        # Crear botones para cada opción
+        for idx, opcion in enumerate(opciones):
+            btn = tk.Button(
+                self.top_motivo,
+                text=opcion,
+                bg="#008000",
+                fg="white",
+                font=("Sora SemiBold", 14, "bold"),
+                width=27,
+                height=2,
+                relief="flat",
+                command=lambda o=opcion: self.abrir_ventana_dni(motivo, o),
+            )
+            btn.pack(pady=10)
+
+
+
+
+
+
+    #################33333333333333333333333
 
 
 
@@ -399,20 +452,33 @@ class MainWindow:
             try:
                 cursor = connection.cursor()
 
+                # Verificar si ya existe el DNI o RUC en la base de datos
+                if tipo_id == "dni":
+                    cursor.execute(f"SELECT {columna_id} FROM {tabla} WHERE {columna_id} = ?", (dni,))
+                elif tipo_id == "ruc":
+                    cursor.execute(f"SELECT {columna_id} FROM {tabla} WHERE {columna_id} = ?", (ruc,))
+
+                result = cursor.fetchone()
+
+                if result:
+                    # Si ya existe el DNI o RUC, mostrar un mensaje de error
+                    messagebox.showerror("Error", f"El {columna_id.upper()} ya está registrado.")
+                    return
+
                 if tipo_id == "dni":
                     # Insertar en la tabla de registros_dni
 
                     cursor.execute(f"""
                                    
                         INSERT INTO registros_dni (dni, nombres)
-                        VALUES (%s, %s)
+                        VALUES (?, ?)
                     """, (dni, nombres_completos))
 
                 elif tipo_id == "ruc":
                     # Insertar en la tabla de registros_ruc
                     cursor.execute(f"""
                         INSERT INTO registros_ruc (ruc, empresa)
-                        VALUES (%s, %s)
+                        VALUES (?, ?)
                     """, (ruc, empresa))
 
                 connection.commit()
@@ -443,17 +509,9 @@ class MainWindow:
 
 
 
-    
-    
-
-
-
-    
-
-
     def obtener_siguiente_numero(self, cursor, prefijo):
         prefijo_busqueda = f"{prefijo}%"
-        cursor.execute("SELECT numero_turno FROM turnos WHERE numero_turno LIKE %s ORDER BY id DESC LIMIT 1", (prefijo_busqueda,))       
+        cursor.execute("SELECT TOP 1 numero_turno FROM turnos WHERE numero_turno LIKE ? ORDER BY id DESC", (prefijo_busqueda,))       
 
         ultimo_turno = cursor.fetchone()
         if ultimo_turno:
