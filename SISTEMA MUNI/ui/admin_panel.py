@@ -5,6 +5,7 @@ from PIL import Image, ImageTk
 import time
 from threading import Thread
 from datetime import datetime
+import math
 
 class AdminPanel:
     def __init__(self, root):
@@ -13,6 +14,7 @@ class AdminPanel:
         self.root.state('zoomed')  # Pantalla completa
         self.root.configure(bg="#F8F8F8")
         self.turnos_atendidos = set()  # Para controlar el orden correcto de "Llamar" â†’ "Siguiente"
+        self.limpiar_tablas_diariamente()
 
         # Ãcono de la ventana
         try:
@@ -49,9 +51,13 @@ class AdminPanel:
         right_container.pack(side=tk.RIGHT, padx=20)
 
         # Reloj en el contenedor derecho
-        self.clock_label = tk.Label(right_container, font=("roboto", 20), bg="#00E201", fg="white")
-        self.clock_label.pack(side=tk.RIGHT, padx=10)
-        self.update_clock()
+        self.clock_canvas = tk.Canvas(right_container, width=100, height=100, bg="#00E201", highlightthickness=0)
+        self.clock_canvas.pack(side=tk.RIGHT, padx=10)
+
+        self.clock_label = tk.Label(right_container, font=("roboto", 14), bg="#00E201", fg="black")
+        self.clock_label.pack(side=tk.RIGHT)
+
+        self.update_clock()  # Iniciar el reloj
         
         
         
@@ -144,7 +150,7 @@ class AdminPanel:
         # Botón para ver turnos cancelados con solo un ícono
         try:
              cancelados_icon_path = r"C:/Users/Max/Desktop/Sistema_muni_g2-main/assets/cancelados.png"  # Asegúrate de que la ruta sea correcta
-             cancelados_icon_image = Image.open(cancelados_icon_path).resize((50, 50), Image.Resampling.LANCZOS)  # Ajusta el tamaño según sea necesario
+             cancelados_icon_image = Image.open(cancelados_icon_path).resize((60, 60), Image.Resampling.LANCZOS)  # Ajusta el tamaño según sea necesario
              self.cancelados_icon_photo = ImageTk.PhotoImage(cancelados_icon_image)
         except Exception as e:
              print(f"Error al cargar el ícono de cancelados: {e}")
@@ -209,9 +215,61 @@ class AdminPanel:
 
 
     def update_clock(self):
-        now = time.strftime("%I:%M:%S %p - %d/%m/%Y")
-        self.clock_label.config(text=now)
-        self.root.after(1000, self.update_clock)
+        now = time.localtime()
+
+        # Calcular la posición de las manecillas del reloj
+        seconds_angle = (now.tm_sec / 60) * 360 - 90
+        minutes_angle = (now.tm_min / 60) * 360 + (now.tm_sec / 60) * 6 - 90
+        hours_angle = ((now.tm_hour % 12) / 12) * 360 + (now.tm_min / 60) * 30 - 90
+
+        # Limpiar el canvas del reloj
+        self.clock_canvas.delete("all")
+
+        # Dibujar círculo del reloj
+        self.clock_canvas.create_oval(5, 5, 95, 95, outline="black")
+
+        # Dibujar números en el reloj en posiciones correctas
+        
+        for i in range(12):
+            angle_rad = math.radians((i - 2) * 30)  # Restar 3 ajusta el inicio al 12 en la parte superior
+            x_numero = 50 + (35 * math.cos(angle_rad))  # Se usa coseno para el eje X
+            y_numero = 50 + (35 * math.sin(angle_rad))  # Se usa seno para el eje Y
+            self.clock_canvas.create_text(x_numero, y_numero, text=str(i + 1), font=("Arial", 10))
+
+
+
+
+        # Dibujar manecillas del reloj
+        hour_hand_length = 25
+        minute_hand_length = 35
+        second_hand_length = 40
+
+        hour_x = 50 + hour_hand_length * math.cos(math.radians(hours_angle))
+        hour_y = 50 + hour_hand_length * math.sin(math.radians(hours_angle))
+
+        minute_x = 50 + minute_hand_length * math.cos(math.radians(minutes_angle))
+        minute_y = 50 + minute_hand_length * math.sin(math.radians(minutes_angle))
+
+        second_x = 50 + second_hand_length * math.cos(math.radians(seconds_angle))
+        second_y = 50 + second_hand_length * math.sin(math.radians(seconds_angle))
+
+        # Dibujar las manecillas en el canvas del reloj
+        self.clock_canvas.create_line(50, 50, hour_x, hour_y, width=4)   # Manecilla de horas
+        self.clock_canvas.create_line(50, 50, minute_x, minute_y, width=3)   # Manecilla de minutos
+        self.clock_canvas.create_line(50, 50, second_x, second_y, fill='red', width=1)   # Manecilla de segundos
+
+        # Actualizar la etiqueta con la hora actual en formato texto.
+        current_time_text = time.strftime("%I:%M:%S %p")
+        self.clock_label.config(text=current_time_text)
+
+        # Agregar la fecha
+        current_date_text = time.strftime("%d-%m-%Y")
+        date_label = tk.Label(self.root, text=current_date_text, font=("Roboto", 18), bg="#00E201", fg="black")
+        date_label.place(relx=0.5, rely=0.05, anchor="center")
+
+        self.root.after(1000, self.update_clock)   # Actualizar cada segundo
+
+
 
     def regresar(self):
         try:
@@ -502,6 +560,28 @@ class AdminPanel:
 
         # Cargar datos de turnos cancelados
         self.cargar_turnos_cancelados()
+
+
+
+    def limpiar_tablas_diariamente(self):
+        # Verificar si es un nuevo día
+        current_date = datetime.now().date()
+        if hasattr(self, 'last_date') and current_date != self.last_date:
+            self.limpiar_tablas()
+        self.last_date = current_date
+
+    def limpiar_tablas(self):
+        # Limpiar la tabla de turnos pendientes
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+
+        # Limpiar la tabla de turnos completados
+        for item in self.completed_tree.get_children():
+            self.completed_tree.delete(item)
+
+
+
+
 
 
 
