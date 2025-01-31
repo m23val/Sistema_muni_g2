@@ -9,12 +9,12 @@ class MenuGeneral:
     def __init__(self, root):
         self.root = root
         self.root.title("Sistema de Atención al Ciudadano")
-        self.root.geometry("700x500")
+        self.root.state('zoomed')  # Pantalla completa
         self.root.configure(bg="#FFFFFF")
 
         #ícono de la ventana
         try:
-            icon_path = r"C:\Users\Max\Desktop\Sistema_muni_g2-main\assets\logo.ico"  # Archivo .ico
+            icon_path = r"C:\Users\marie\OneDrive\Escritorio\SISTEMA\Sistema_muni_g2\assets\logo.ico"  # Archivo .ico
             self.root.iconbitmap(icon_path)  # Para archivos .ico
         except Exception as e:
             print(f"Error al cargar el ícono de la ventana: {e}")
@@ -22,40 +22,69 @@ class MenuGeneral:
 
         # Logo de la Municipalidad
         try:
-            image_path = r"C:\Users\Max\Desktop\Sistema_muni_g2-main\assets\logo_completo.png"
-            image = Image.open(image_path).resize((280, 120), Image.Resampling.LANCZOS)
+            image_path = r"C:\Users\marie\OneDrive\Escritorio\SISTEMA\Sistema_muni_g2\assets\logo_completo.png"
+            image = Image.open(image_path).resize((380, 150), Image.Resampling.LANCZOS)
             self.logo = ImageTk.PhotoImage(image)
             logo_label = tk.Label(self.root, image=self.logo, bg="#FFFFFF")
-            logo_label.pack(pady=10)
+            logo_label.pack(pady=15)
         except Exception as e:
             print(f"Error al cargar la imagen: {e}")
 
         # Título
-        tk.Label(root, text="BIENVENIDO AL SISTEMA DE ATENCIÓN AL CIUDADANO", font=("Arial", 18, "bold"), bg="#FFFFFF").pack(pady=20)
+        tk.Label(
+            root, 
+            text="BIENVENIDO AL SISTEMA DE ATENCIÓN AL CIUDADANO", 
+            font=("Sora SemiBold", 18, "bold"), 
+            bg="#FFFFFF"
+            ).pack(pady=20)
 
         # Botones con íconos
-        self.create_option_button("Ciudadano", "#00FF00", r"C:\Users\Max\Desktop\Sistema_muni_g2-main\assets\ciudadano.png", self.open_ciudadano)
-        self.create_option_button("Administrador", "#FFFF00", r"C:\Users\Max\Desktop\Sistema_muni_g2-main\assets\admin.png", self.open_admin)
-        self.create_option_button("Visualizar Turnos", "#00BFFF", r"C:\Users\Max\Desktop\Sistema_muni_g2-main\assets\visualTurno.png", self.view_turns)
+        self.create_option_button(
+            "Ciudadano", 
+            "#00FF00", 
+            r"C:\Users\marie\OneDrive\Escritorio\SISTEMA\Sistema_muni_g2\assets\ciudadano.png", 
+            self.open_ciudadano
+            )
+        self.create_option_button(
+            "Administrador", 
+            "#FFFF00", 
+            r"C:\Users\marie\OneDrive\Escritorio\SISTEMA\Sistema_muni_g2\assets\admin.png", 
+            self.open_admin
+            )
+        self.create_option_button(
+            "Visualizar Turnos", 
+            "#00BFFF", 
+            r"C:\Users\marie\OneDrive\Escritorio\SISTEMA\Sistema_muni_g2\assets\visualTurno.png", 
+            self.view_turns
+            )
 
-    def create_option_button(self, text, color, icon_path, command):
+    def create_option_button(self,  text, color, icon_path, command):
         #"""Crea un botón de opción con diseño personalizado."""
-        frame = tk.Frame(self.root, bg=color, padx=20, pady=20)
+        frame = tk.Frame(self.root,  bg=color, width=250, height=300, highlightthickness=3)
         frame.pack(side=tk.LEFT, expand=True, padx=30, pady=30)
 
+        frame.pack_propagate(False)
+
         try:
-            icon_image = Image.open(icon_path).resize((80, 80), Image.Resampling.LANCZOS)
+            icon_image = Image.open(icon_path).resize((90, 90), Image.Resampling.LANCZOS)
             icon = ImageTk.PhotoImage(icon_image)
             icon_label = tk.Label(frame, image=icon, bg=color)
             icon_label.image = icon 
-            icon_label.pack()
+            icon_label.pack(pady=(70,10))
         except Exception as e:
             print(f"Error al cargar el ícono '{text}': {e}")
             icon_label = tk.Label(frame, text="●", font=("Arial", 50), bg=color)
             icon_label.pack()
         
-        button = tk.Button(frame, text=text, command=command, font=("Arial", 14), bg=color)
-        button.pack()
+        button = tk.Button(
+            frame, 
+            text=text, 
+            command=command, 
+            font=("Sora SemiBold", 14), 
+            bg=color,
+            borderwidth=5,
+            width=15)
+        button.pack(side="bottom", pady=10)
 
 ##########################Abre el menu del ciudadano###########################
     def open_ciudadano(self):
@@ -79,6 +108,11 @@ class MenuGeneral:
         new_root = tk.Tk()
         VisualizePanel(new_root)  # Crea una instancia del panel de visualización (corrige aquí si es necesario)
         new_root.mainloop()
+######################### Para mostrar la ventana #################33
+def show(self):
+        """Método para mostrar la ventana del menú general."""
+        self.root.deiconify()  # Muestra la ventana del menú general
+        self.root.mainloop()   # Ejecuta el loop de la ventana
 
 # Código para ejecutar el menú general
 if __name__ == "__main__":
