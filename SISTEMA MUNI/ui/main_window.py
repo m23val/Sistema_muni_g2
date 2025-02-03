@@ -2,7 +2,9 @@ import tkinter as tk
 from tkinter import messagebox, Toplevel
 from db.connection import get_connection
 from datetime import datetime
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageWin
+import win32print
+import win32ui
 
 
 class MainWindow:
@@ -192,7 +194,6 @@ class MainWindow:
 
         hora_actual = datetime.now().strftime("%H:%M:%S")  # Hora actual en formato HH:MM:SS
 
-
         connection = get_connection()
         if connection:
             try:
@@ -209,7 +210,7 @@ class MainWindow:
 
                     if result_dni:
                         nombre = result_dni[1]
-                        detalle = f"Nombre: {nombre}"
+                        detalle = f"{nombre}"
                     else:
                         # Si no se encuentra en registros_dni, mandar a registrar
                         self.registrar_usuario(dni_ruc)
@@ -272,16 +273,19 @@ class MainWindow:
                     f"----------------------------------------------\n"
                     f"Municipalidad de Nuevo Chimbote\n"
                     f"----------------------------------------------\n"
-                    f"Turno: {turno}\n"
-                    f"Motivo: {motivo}\n"
-                    f"{detalle}\n"  # Muestra el nombre o la empresa
-                    f"DNI/RUC: {dni_ruc}\n"
                     f"Hora: {hora_actual}\n"
+                    f"Bienvenido\n"
+                    f"{detalle}\n"  # Muestra el nombre o la empresa
+                    f"{turno}\n"
+                    f"Motivo: {motivo}\n"
+                    f"DNI/RUC: {dni_ruc}\n"
                     f"----------------------------------------------\n"
                     f"Por favor espere su turno.\n"
                     f"Gracias por su paciencia.\n"
-                )
+                )    
                 messagebox.showinfo("Turno Generado", mensaje)
+                # Aquí puedes llamar a la función de impresión
+                self.imprimir_turno(turno, motivo, detalle, dni_ruc, hora_actual)
 
                 # Limpiar el campo de DNI
                 self.dni_ruc_entry.delete(0, tk.END)
@@ -296,8 +300,6 @@ class MainWindow:
                 connection.close()
         else:
             messagebox.showerror("Error", "No se pudo conectar a la base de datos")
-
-
 
     ###################################
 
@@ -499,12 +501,162 @@ class MainWindow:
 
 
 
+################################################################################################################################################
 
 
+    def imprimir_turno(self, turno, motivo, detalle, dni_ruc, hora_actual):
+        """Función para imprimir el ticket de turno con formato mejorado."""
+        
+        # Obtener impresora predeterminada
+        #printer_name = "Microsoft Print to PDF"   ### Para visualizar en pdf
+        printer_name = win32print.GetDefaultPrinter()
+        hprinter = win32print.OpenPrinter(printer_name)
+        printer_info = win32print.GetPrinter(hprinter, 2)
+        
+        # Crear un contexto de impresión
+        pdc = win32ui.CreateDC()
+        pdc.CreatePrinterDC(printer_name)
+        
+        # Iniciar impresión
+        pdc.StartDoc('Turno')
+        pdc.StartPage()
+
+        # Configurar el tamaño de hoja A4 en puntos (Ancho x Alto)
+        ancho_hoja, alto_hoja = pdc.GetDeviceCaps(8), pdc.GetDeviceCaps(10)
+
+        # Definir fuentes de diferentes tamaños
+        font_normal = win32ui.CreateFont({
+            "name": "Arial",
+            "height": 80,  # Tamaño grande para mejor visibilidad
+            "weight": 700,  # Negrita
+        })
+
+        font_grande = win32ui.CreateFont({
+            "name": "Arial",
+            "height": 200,  # Tamaño muy grande para el número de turno
+            "weight": 900,  # Negrita intensa
+        })
+
+        font_mediana = win32ui.CreateFont({
+            "name": "Arial",
+            "height": 100,  # Tamaño intermedio
+            "weight": 700,  # Negrita
+        })
+
+        # Posiciones iniciales
+        x_centro = int(ancho_hoja / 2.5)  # Centrar el texto
+        y_inicio = 300  # Ajuste vertical para comenzar
+        espacio_entre_lineas = 120  # Espaciado entre líneas
+
+        
+        # Número de Turno (Formato Grande)
+        pdc.SelectObject(font_grande)
+        
+
+        # Obtener el tamaño del texto para centrarlo
+        text_size = pdc.GetTextExtent(turno)
+        x_centro_exacto = int((ancho_hoja - text_size[0])/2.5)   # Centrar horizontalmente
 
 
+        pdc.TextOut(x_centro_exacto, y_inicio, f"N° de Turno: {turno}")
+        y_inicio += espacio_entre_lineas + 80  # Más espacio debajo del turno
+        
 
 
+         # Cargar la imagen
+        logo_path = r"C:\Users\marie\OneDrive\Escritorio\SISTEMA\Sistema_muni_g2\assets\logo.png"
+        try:
+            logo = Image.open(logo_path)
+
+            # Convertir a modo RGBA si tiene transparencia
+            if logo.mode in ("RGBA", "LA"):
+                fondo_blanco = Image.new("RGB", logo.size, (255, 255, 255))  # Crear fondo blanco
+                fondo_blanco.paste(logo, mask=logo.split()[3])  # Aplicar máscara alfa
+                logo = fondo_blanco  # Reemplazar la imagen con la nueva sin transparencia
+
+            # Redimensionar la imagen
+            max_width = 400
+            ratio = max_width / float(logo.width)
+            new_width = int(logo.width * ratio)
+            new_height = int(logo.height * ratio)
+            logo = logo.resize((new_width, new_height))
+
+            # Convertir imagen a modo BMP compatible
+            logo = logo.convert("RGB")
+            
+            # Crear un contexto de dispositivo compatible con la impresora
+            hdc_printer = pdc.GetHandleOutput()
+            dib = ImageWin.Dib(logo)
+            # Centrar la imagen en la hoja
+            x_centro_imagen = (ancho_hoja - new_width) // 2  # Centrar la imagen en la hoja
+            y_fin_imagen = y_inicio + new_height
+            
+            # Dibujar la imagen en la impresora
+            dib.draw(hdc_printer, (x_centro_imagen, y_inicio, x_centro_imagen + new_width, y_fin_imagen))
+            y_inicio = y_fin_imagen + 30  # Ajustar la posición después de la imagen
+
+        except Exception as e:
+            print(f"Error al cargar la imagen: {e}")
+        
+        fecha_actual = datetime.today().strftime('%d-%m-%Y')
+
+
+         # DNI
+        pdc.SelectObject(font_mediana)
+        x_centro_exacto = (ancho_hoja - text_size[0]) // 2
+        pdc.TextOut(x_centro, y_inicio, f"DNI: {dni_ruc}")
+        y_inicio += espacio_entre_lineas        
+
+
+        # Motivo y caja
+        
+        pdc.TextOut(x_centro, y_inicio, f"Motivo: {motivo}")
+        y_inicio += espacio_entre_lineas
+
+        # Dibujar una línea separadora
+        pdc.MoveTo(x_centro - 100, y_inicio)  # Punto de inicio de la línea
+        pdc.LineTo(x_centro + 1200, y_inicio)  # Punto final de la línea (ajustar longitud)
+        y_inicio += 40  # Espacio después de la línea
+
+        #Fecha
+        pdc.TextOut(x_centro, y_inicio, f"Fecha: {fecha_actual}")
+        y_inicio += espacio_entre_lineas
+
+
+        # Hora
+        pdc.TextOut(x_centro, y_inicio, f"Hora: {hora_actual}")
+        y_inicio += espacio_entre_lineas
+
+        # Dibujar una línea separadora
+        pdc.MoveTo(x_centro - 100, y_inicio)  # Punto de inicio de la línea
+        pdc.LineTo(x_centro + 1200, y_inicio)  # Punto final de la línea (ajustar longitud)
+        y_inicio += 40  # Espacio después de la línea
+
+        # Nombre del usuario
+        pdc.TextOut(x_centro, y_inicio, f"{detalle}")
+        y_inicio += espacio_entre_lineas
+
+        
+
+        # Mensaje final
+        pdc.SelectObject(font_normal)
+        pdc.TextOut(x_centro, y_inicio, "Por favor espere su turno")
+        y_inicio += espacio_entre_lineas // 1
+        pdc.TextOut(x_centro, y_inicio, "¡¡Gracias por su paciencia!!")
+
+        y_inicio += espacio_entre_lineas // 1
+
+        #pdc.SelectObject(font_normal)
+        #pdc.TextOut(x_centro, y_inicio, "Municipalidad de Nuevo Chimbote")
+        #y_inicio += espacio_entre_lineas
+
+
+        # Finalizar impresión
+        pdc.EndPage()
+        pdc.EndDoc()
+        pdc.DeleteDC()
+
+#######################################################################################################################################################
 
 
 
