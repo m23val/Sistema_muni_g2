@@ -362,6 +362,8 @@ class AdminPanel:
             finally:
                 cursor.close()
                 connection.close()
+        # Actualizar automáticamente cada 5 segundos
+        self.root.after(5000, self.cargar_turnos)
 
 
 
@@ -610,6 +612,8 @@ class AdminPanel:
             finally:
                 cursor.close()
                 connection.close()
+        # Actualizar automáticamente cada 5 segundos
+        self.root.after(5000, self.cargar_turnos_cancelados)
 
 if __name__ == "__main__":
     root = tk.Tk()

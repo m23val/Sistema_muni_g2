@@ -187,7 +187,7 @@ class VisualizePanel:
 
         # Actualizar datos
         self.cargar_turnos()
-        self.root.after(5000, self.cargar_turnos)
+        #self.root.after(5000, self.cargar_turnos)
 
     def update_time(self):
         """Actualiza la hora y fecha."""
@@ -245,6 +245,7 @@ class VisualizePanel:
             finally:
                 cursor.close()
                 connection.close()
+        self.root.after(5000, self.cargar_turnos)
 
 
 # Ejecutar la aplicación
