@@ -285,121 +285,162 @@ class AdminPanel:
             messagebox.showerror("Error", f"No se pudo regresar al menÃº principal: {e}")
 
     def cargar_turnos(self):
-        connection = get_connection()
+         # Guardar el numero_turno del item seleccionado
+            selected_item = self.tree.selection()
+            selected_turno = None
+            if selected_item:
+                selected_turno = self.tree.item(selected_item)["values"][0]  # Guardamos el número del turno
 
-        if connection:
-            try:
-                cursor = connection.cursor()
+            connection = get_connection()
+            if connection:
+                try:
+                    cursor = connection.cursor()
 
-                # Cargar turnos pendientes con nombre y RUC
-                cursor.execute("""
-                    SELECT 
-                        t.numero_turno, 
-                        t.dni_ruc, 
-                        t.nombres_empresa AS nombres,
-                        t.motivo, 
-                        t.estado, 
-                        FORMAT (t.fecha_hora, 'HH:mm:ss') AS hora, 
-                        t.ventanilla
-                    FROM turnos t
-                    WHERE t.estado NOT IN ('completado', 'cancelado')
-                    ORDER BY t.fecha_hora ASC;
-                """)
-                turnos = cursor.fetchall()
+                    # Cargar turnos pendientes con nombre y RUC
+                    cursor.execute("""
+                        SELECT 
+                            t.numero_turno, 
+                            t.dni_ruc, 
+                            t.nombres_empresa AS nombres,
+                            t.motivo, 
+                            t.estado, 
+                            FORMAT (t.fecha_hora, 'HH:mm:ss') AS hora, 
+                            t.ventanilla
+                        FROM turnos t
+                        WHERE t.estado NOT IN ('completado', 'cancelado')
+                            AND CONVERT (DATE, t.fecha_hora) = CONVERT(DATE, GETDATE())
+                        ORDER BY t.fecha_hora ASC;
+                    """)
+                    turnos = cursor.fetchall()
 
-                # Limpiar la tabla de turnos pendientes
+                    # Limpiar la tabla de turnos pendientes
+                    for item in self.tree.get_children():
+                        self.tree.delete(item)
+
+                    for turno in turnos:
+                        item_id = self.tree.insert("", tk.END, values=(
+                            turno[0], 
+                            turno[1], 
+                            turno[2] if turno[2] is not None else "-",
+                            turno[3], 
+                            turno[4], 
+                            turno[5], 
+                            turno[6]
+                        ))
+
+                        # Aplicar color celeste pastel si el estado es 'atendiendo'
+                        if turno[4] == 'atendiendo':
+                            self.tree.item(item_id, tags=('atendiendo',))
+
+                    # Configurar el estilo para resaltar filas
+                    self.tree.tag_configure('atendiendo', background='#F4ED73')  # Color celeste pastel
+
+                    # Cargar turnos completados
+                    cursor.execute("""
+                        SELECT 
+                            numero_turno, 
+                            dni_ruc, 
+                            nombres_empresa AS nombres,
+                            FORMAT(hora_atencion, 'HH:mm:ss'), 
+                            FORMAT(hora_termino, 'HH:mm:ss')
+                        FROM turnos
+                        WHERE estado = 'completado'
+                            AND CONVERT (DATE, fecha_hora) = CONVERT(DATE, GETDATE())
+                        ORDER BY hora_termino ASC;
+                    """)
+                    completados = cursor.fetchall()
+
+                    # Limpiar la tabla de completados
+                    for item in self.completed_tree.get_children():
+                        self.completed_tree.delete(item)
+
+                    for turno in completados:
+                        self.completed_tree.insert("", tk.END, values=(
+                            turno[0], 
+                            turno[1], 
+                            turno[2] if turno[2] is not None else "-",
+                            turno[3], 
+                            turno[4]
+                        ))
+
+                except Exception as e:
+                    messagebox.showerror("Error", f"Error al cargar turnos: {e}")
+                finally:
+                    cursor.close()
+                    connection.close()
+
+            # Actualizar automáticamente cada 5 segundos
+            self.root.after(5000, self.cargar_turnos)
+
+            # Restaurar la selección después de la actualización
+            if selected_turno:
+                # Verificar si el turno aún está en la lista después de la actualización
                 for item in self.tree.get_children():
-                    self.tree.delete(item)
-
-                for turno in turnos:
-                    # Insertar el turno en la tabla
-                    item_id = self.tree.insert("", tk.END, values=(
-                        turno[0], 
-                        turno[1], 
-                        turno[2] if turno[2] is not None else "-",
-                        turno[3], 
-                        turno[4], 
-                        turno[5], 
-                        turno[6]
-                    ))
-
-                    # Aplicar color celeste pastel si el estado es 'atendiendo'
-                    if turno[4] == 'atendiendo':
-                        self.tree.item(item_id, tags=('atendiendo',))
-
-                # Configurar el estilo para resaltar filas
-                self.tree.tag_configure('atendiendo', background='#F4ED73')  # Color celeste pastel
-
-                # Cargar turnos completados
-                cursor.execute("""
-                    SELECT 
-                        numero_turno, 
-                        dni_ruc, 
-                        nombres_empresa AS nombres,
-                        FORMAT(hora_atencion, 'HH:mm:ss'), 
-                        FORMAT(hora_termino, 'HH:mm:ss')
-                    FROM turnos
-                    WHERE estado = 'completado'
-                    ORDER BY hora_termino ASC;
-                """)
-                completados = cursor.fetchall()
-
-                # Limpiar la tabla de completados
-                for item in self.completed_tree.get_children():
-                    self.completed_tree.delete(item)
-
-                for turno in completados:
-                    self.completed_tree.insert("", tk.END, values=(
-                        turno[0], 
-                        turno[1], 
-                        turno[2] if turno[2] is not None else "-",
-                        turno[3], 
-                        turno[4]
-                    ))
-
-            except Exception as e:
-                messagebox.showerror("Error", f"Error al cargar turnos: {e}")
-            finally:
-                cursor.close()
-                connection.close()
-        # Actualizar automáticamente cada 5 segundos
-        self.root.after(5000, self.cargar_turnos)
-
-
+                    if self.tree.item(item)["values"][0] == selected_turno:
+                        self.tree.selection_set(item)
+                        break
 
 
 
     def llamar_turno(self):
-        selected_item = self.tree.selection()
-        if not selected_item:
-            messagebox.showwarning("Advertencia", "Seleccione un turno para llamar.")
-            return
-
-        turno = self.tree.item(selected_item)["values"][0]
         connection = get_connection()
         if connection:
             try:
                 cursor = connection.cursor()
-                cursor.execute("SELECT ventanilla FROM encargados WHERE ventanilla NOT IN (SELECT ventanilla FROM turnos WHERE estado = 'atendiendo')")
+
+                # 🔎 Buscar el primer turno pendiente más antiguo
+                cursor.execute("""
+                    SELECT TOP 1 numero_turno 
+                    FROM turnos 
+                    WHERE estado NOT IN ('completado', 'cancelado', 'atendiendo') 
+                    ORDER BY fecha_hora ASC;
+                """)
+                turno = cursor.fetchone()
+
+                if not turno:
+                    messagebox.showwarning("Advertencia", "No hay turnos pendientes para llamar.")
+                    return
+
+                turno = turno[0]  # Extraer el número de turno
+
+                #Buscar ventanilla libre
+                cursor.execute("""
+                    SELECT TOP 1 ventanilla 
+                    FROM encargados 
+                    WHERE ventanilla NOT IN (
+                        SELECT ventanilla 
+                        FROM turnos 
+                        WHERE estado = 'atendiendo'
+                    ) 
+                """)
                 ventanilla = cursor.fetchone()
 
                 if not ventanilla:
                     messagebox.showwarning("Advertencia", "No hay ventanillas disponibles.")
                     return
 
-                #cursor.execute("UPDATE turnos SET estado = 'atendiendo', ventanilla = %s, hora_atencion = NOW() WHERE numero_turno = %s", (ventanilla[0], turno))
-                cursor.execute("UPDATE turnos SET estado = ?, ventanilla = ?, hora_atencion = GETDATE() WHERE numero_turno = ?", ("atendiendo", ventanilla[0], turno))
+                ventanilla = ventanilla[0]
+
+                # Asignar el turno a la ventanilla y actualizar estado
+                cursor.execute("""
+                    UPDATE turnos 
+                    SET estado = 'atendiendo', ventanilla = ?, hora_atencion = GETDATE() 
+                    WHERE numero_turno = ?
+                """, (ventanilla, turno))
                 connection.commit()
-                self.turno_actual = turno  # Registrar turno en atenciÃ³n
-                messagebox.showinfo("Ã‰xito", f"Turno {turno} asignado a la ventanilla {ventanilla[0]}.")
+
+                messagebox.showinfo("Éxito", f"Turno {turno} asignado a la ventanilla {ventanilla}.")
+
+                # Recargar la lista de turnos
                 self.cargar_turnos()
+
             except Exception as e:
                 connection.rollback()
                 messagebox.showerror("Error", f"Error al llamar turno: {e}")
+
             finally:
                 cursor.close()
                 connection.close()
-
 
                 
 
@@ -432,6 +473,7 @@ class AdminPanel:
                     SELECT TOP 1 numero_turno, ventanilla 
                     FROM turnos 
                     WHERE estado NOT IN ('completado', 'cancelado', 'atendiendo') 
+                    AND CONVERT(DATE, fecha_hora) = CONVERT(DATE, GETDATE()) 
                     ORDER BY fecha_hora ASC 
                 """)
                 next_turno = cursor.fetchone()
@@ -451,6 +493,9 @@ class AdminPanel:
                 else:
                     connection.commit()
                     messagebox.showinfo("Información", f"Turno {turno} completado. No hay más turnos pendientes.")
+
+                #Selección del turno
+                self.tree.selection_set(selected_item)
 
                 self.cargar_turnos()
 
@@ -476,17 +521,50 @@ class AdminPanel:
         if connection:
             try:
                 cursor = connection.cursor()
+                # Verificar el estado del turno
+                cursor.execute("SELECT estado, ventanilla FROM turnos WHERE numero_turno = ?", (turno,))
+                resultado = cursor.fetchone()
                 cursor.execute("SELECT estado FROM turnos WHERE numero_turno = ?", (turno,))
                 estado = cursor.fetchone()
 
                 if not estado or estado[0] != "atendiendo":
                     messagebox.showwarning("Advertencia", "Solo se pueden cancelar turnos que estén en estado 'atendiendo'.")
                     return
+                ventanilla = resultado[1]  # Obtener la ventanilla del turno cancelado
 
                 cursor.execute("UPDATE turnos SET estado = 'cancelado' WHERE numero_turno = ?", (turno,))
                 connection.commit()
                 messagebox.showinfo("Éxito", f"Turno {turno} cancelado.")
                 self.cargar_turnos()
+
+
+
+                # Buscar el siguiente turno más temprano
+                cursor.execute("""
+                    SELECT TOP 1 numero_turno 
+                    FROM turnos 
+                    WHERE estado NOT IN ('completado', 'cancelado', 'atendiendo') 
+                    ORDER BY fecha_hora ASC
+                """)
+                siguiente_turno = cursor.fetchone()
+
+                if siguiente_turno:
+                    # Asignar el siguiente turno a la ventanilla que quedó disponible
+                    cursor.execute("""
+                        UPDATE turnos 
+                        SET estado = 'atendiendo', ventanilla = ?, hora_atencion = GETDATE() 
+                        WHERE numero_turno = ?
+                    """, (ventanilla, siguiente_turno[0]))
+                    connection.commit()
+                    messagebox.showinfo("Información", f"Turno {siguiente_turno[0]} asignado automáticamente a la ventanilla {ventanilla}.")
+
+                self.cargar_turnos()  # Actualizar la interfaz
+
+
+
+
+
+
             except Exception as e:
                 connection.rollback()
                 messagebox.showerror("Error", f"Error al cancelar turno: {e}")
@@ -566,18 +644,45 @@ class AdminPanel:
         if hasattr(self, 'last_date') and current_date != self.last_date:
             self.limpiar_tablas()
         self.last_date = current_date
+         # Volver a ejecutar la función después de 1 hora (3600000 ms)
+        self.root.after(60000, self.limpiar_tablas_diariamente)  
 
     def limpiar_tablas(self):
-        # Limpiar la tabla de turnos pendientes
-        for item in self.tree.get_children():
-            self.tree.delete(item)
+        connection = get_connection()
+        if connection: 
+            try:
+                cursor = connection.cursor()
+                # Liberar ventanillas ocupadas por turnos anteriores
+                cursor.execute("""
+                    UPDATE turnos
+                    SET ventanilla = NULL
+                    WHERE CONVERT(DATE, fecha_hora) < CONVERT(DATE, GETDATE())
+                    OR estado IN ('completado', 'cancelado')
+                """)
+                connection.commit()  # Confirmar cambios en la BD
 
-        # Limpiar la tabla de turnos completados
-        for item in self.completed_tree.get_children():
-            self.completed_tree.delete(item)
+                # Limpiar la tabla de turnos pendientes en la interfaz
+                for item in self.tree.get_children():
+                    self.tree.delete(item)
+
+                # Limpiar la tabla de turnos completados en la interfaz
+                for item in self.completed_tree.get_children():
+                    self.completed_tree.delete(item)
+
+            except Exception as e:
+                messagebox.showerror("Error", f"Error al limpiar las tablas: {e}")
+
+            finally:
+                cursor.close()
+                connection.close()
+
+        self.root.after(60000, self.limpiar_tablas)  
+
 
 
     def cargar_turnos_cancelados(self):
+        if not hasattr(self, 'ventana_cancelados') or not self.ventana_cancelados.winfo_exists():
+            return  # No actualiza si la ventana ha sido cerrada
         connection = get_connection()
         if connection:
             try:
@@ -590,6 +695,7 @@ class AdminPanel:
                         motivo
                     FROM turnos
                     WHERE estado = 'cancelado'
+                        AND CONVERT (DATE, fecha_hora) = CONVERT(DATE, GETDATE())
                     ORDER BY fecha_hora DESC
                 """)
                 cancelados = cursor.fetchall()
@@ -612,10 +718,16 @@ class AdminPanel:
             finally:
                 cursor.close()
                 connection.close()
+
+        # Solo actualizar si la ventana sigue abierta
+        if hasattr(self, 'ventana_cancelados') and self.ventana_cancelados.winfo_exists():
+            self.root.after(5000, self.cargar_turnos_cancelados) 
         # Actualizar automáticamente cada 5 segundos
-        self.root.after(5000, self.cargar_turnos_cancelados)
+        #self.root.after(5000, self.cargar_turnos_cancelados)
 
 if __name__ == "__main__":
     root = tk.Tk()
     app = AdminPanel(root)
+    app.limpiar_tablas_diariamente
+    app.limpiar_tablas
     root.mainloop()
