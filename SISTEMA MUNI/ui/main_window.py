@@ -351,6 +351,7 @@ class MainWindow:
         self.top_registro.geometry("600x500")
         self.top_registro.configure(bg="#FFFFFF")
 
+        self.top_registro.iconbitmap(r"C:\Users\marie\OneDrive\Escritorio\SISTEMA\Sistema_muni_g2\assets\logo.ico")
         # Título
         tk.Label(self.top_registro, text="Registro de Usuario", font=("Sora SemiBold", 16), bg="#FFFFFF").pack(pady=10)
 
@@ -508,8 +509,8 @@ class MainWindow:
         """Función para imprimir el ticket de turno con formato mejorado."""
         
         # Obtener impresora predeterminada
-        #printer_name = "Microsoft Print to PDF"   ### Para visualizar en pdf
-        printer_name = win32print.GetDefaultPrinter()
+        printer_name = "Microsoft Print to PDF"   ### Para visualizar en pdf
+        #printer_name = win32print.GetDefaultPrinter()
         hprinter = win32print.OpenPrinter(printer_name)
         printer_info = win32print.GetPrinter(hprinter, 2)
         
@@ -530,7 +531,6 @@ class MainWindow:
             "height": 80,  # Tamaño grande para mejor visibilidad
             "weight": 700,  # Negrita
         })
-
         font_grande = win32ui.CreateFont({
             "name": "Arial",
             "height": 200,  # Tamaño muy grande para el número de turno
@@ -540,13 +540,13 @@ class MainWindow:
         font_mediana = win32ui.CreateFont({
             "name": "Arial",
             "height": 100,  # Tamaño intermedio
-            "weight": 700,  # Negrita
+            "weight": 200,  # Negrita
         })
 
         # Posiciones iniciales
         x_centro = int(ancho_hoja / 2.5)  # Centrar el texto
         y_inicio = 300  # Ajuste vertical para comenzar
-        espacio_entre_lineas = 120  # Espaciado entre líneas
+        espacio_entre_lineas = 150  # Espaciado entre líneas
 
         
         # Número de Turno (Formato Grande)
@@ -575,7 +575,7 @@ class MainWindow:
                 logo = fondo_blanco  # Reemplazar la imagen con la nueva sin transparencia
 
             # Redimensionar la imagen
-            max_width = 400
+            max_width = 600
             ratio = max_width / float(logo.width)
             new_width = int(logo.width * ratio)
             new_height = int(logo.height * ratio)
