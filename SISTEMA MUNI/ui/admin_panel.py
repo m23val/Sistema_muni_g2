@@ -18,7 +18,7 @@ class AdminPanel:
 
         # Ãcono de la ventana
         try:
-            icon_path = "C:/Users/marie/OneDrive/Escritorio/SISTEMA/sistema_muni_g2/assets/logo.ico"
+            icon_path = "C:/Users/Max/Desktop/Sistema_muni_g2-main/assets/logo.ico"
             self.root.iconbitmap(icon_path)
         except Exception as e:
             print(f"Error al cargar el ícono de la ventana: {e}")
@@ -30,7 +30,7 @@ class AdminPanel:
         
 
         try:
-            image_path = "C:/Users/marie/OneDrive/Escritorio/SISTEMA/Sistema_muni_g2/assets/logo_completo.png"
+            image_path = "C:/Users/Max/Desktop/Sistema_muni_g2-main/assets/logo_completo.png"
             image = Image.open(image_path).resize((250, 80), Image.Resampling.LANCZOS)
             self.logo = ImageTk.PhotoImage(image)
         except Exception as e:
@@ -40,7 +40,7 @@ class AdminPanel:
         logo_label.pack(side=tk.LEFT, padx=20, pady=12)
 
         try:
-            image_path_admin = "C:/Users/marie/OneDrive/Escritorio/SISTEMA/Sistema_muni_g2/assets/admin.png"
+            image_path_admin = "C:/Users/Max/Desktop/Sistema_muni_g2-main/assets/admin.png"
             image_admin = Image.open(image_path_admin).resize((30, 30), Image.Resampling.LANCZOS)
             self.logo_admin = ImageTk.PhotoImage(image_admin)
         except Exception as e:
@@ -134,9 +134,9 @@ class AdminPanel:
 
 
         try:
-            siguiente_icon = Image.open("C:/Users/marie/OneDrive/Escritorio/SISTEMA/Sistema_muni_g2/assets/siguiente.png").resize((20, 20), Image.Resampling.LANCZOS)
-            llamar_icon = Image.open("C:/Users/marie/OneDrive/Escritorio/SISTEMA/Sistema_muni_g2/assets/llamar.png").resize((20, 20), Image.Resampling.LANCZOS)
-            cancelar_icon = Image.open("C:/Users/marie/OneDrive/Escritorio/SISTEMA/Sistema_muni_g2/assets/cancelar.png").resize((20, 20), Image.Resampling.LANCZOS)
+            siguiente_icon = Image.open("C:/Users/Max/Desktop/Sistema_muni_g2-main/assets/siguiente.png").resize((20, 20), Image.Resampling.LANCZOS)
+            llamar_icon = Image.open("C:/Users/Max/Desktop/Sistema_muni_g2-main/assets/llamar.png").resize((20, 20), Image.Resampling.LANCZOS)
+            cancelar_icon = Image.open("C:/Users/Max/Desktop/Sistema_muni_g2-main/assets/cancelar.png").resize((20, 20), Image.Resampling.LANCZOS)
 
             self.siguiente_icon_image = ImageTk.PhotoImage(siguiente_icon)
             self.llamar_icon_image = ImageTk.PhotoImage(llamar_icon)
@@ -149,7 +149,7 @@ class AdminPanel:
 
         # Botón para ver turnos cancelados con solo un ícono
         try:
-             cancelados_icon_path = r"C:/Users/marie/OneDrive/Escritorio/SISTEMA/Sistema_muni_g2/assets/cancelados.png"  # Asegúrate de que la ruta sea correcta
+             cancelados_icon_path = r"C:/Users/Max/Desktop/Sistema_muni_g2-main/assets/cancelados.png"  # Asegúrate de que la ruta sea correcta
              cancelados_icon_image = Image.open(cancelados_icon_path).resize((50, 50), Image.Resampling.LANCZOS)  # Ajusta el tamaño según sea necesario
              self.cancelados_icon_photo = ImageTk.PhotoImage(cancelados_icon_image)
         except Exception as e:
@@ -273,7 +273,7 @@ class AdminPanel:
     def regresar(self):
         try:
             import importlib.util
-            spec = importlib.util.spec_from_file_location("menu_general", r"C:\Users\marie\OneDrive\Escritorio\SISTEMA\Sistema_muni_g2\SISTEMA MUNI\ui\menu_general.py")
+            spec = importlib.util.spec_from_file_location("menu_general", r"C:\Users\Max\Desktop\Sistema_muni_g2-main\SISTEMA MUNI\ui\menu_general.py")
             menu_general = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(menu_general)
 
@@ -299,17 +299,17 @@ class AdminPanel:
                     # Cargar turnos pendientes con nombre y RUC
                     cursor.execute("""
                         SELECT 
-                            t.numero_turno, 
-                            t.dni_ruc, 
+                            t.numero_turno,
+                            t.dni_ruc,
                             t.nombres_empresa AS nombres,
-                            t.motivo, 
-                            t.estado, 
-                            FORMAT (t.fecha_hora, 'HH:mm:ss') AS hora, 
+                            t.motivo,
+                            t.estado,
+                            CONVERT(VARCHAR(8), t.fecha_hora, 108) AS hora,  -- Extrae solo HH:mm:ss
                             t.ventanilla
                         FROM turnos t
                         WHERE t.estado NOT IN ('completado', 'cancelado')
-                            AND CONVERT (DATE, t.fecha_hora) = CONVERT(DATE, GETDATE())
                         ORDER BY t.fecha_hora ASC;
+
                     """)
                     turnos = cursor.fetchall()
 
@@ -341,12 +341,13 @@ class AdminPanel:
                             numero_turno, 
                             dni_ruc, 
                             nombres_empresa AS nombres,
-                            FORMAT(hora_atencion, 'HH:mm:ss'), 
-                            FORMAT(hora_termino, 'HH:mm:ss')
+                            CONVERT(VARCHAR(8), hora_atencion, 108) AS hora_atencion, 
+                            CONVERT(VARCHAR(8), hora_termino, 108) AS hora_termino
                         FROM turnos
                         WHERE estado = 'completado'
-                            AND CONVERT (DATE, fecha_hora) = CONVERT(DATE, GETDATE())
                         ORDER BY hora_termino ASC;
+
+
                     """)
                     completados = cursor.fetchall()
 
@@ -446,35 +447,47 @@ class AdminPanel:
 
     def siguiente_turno(self):
         selected_item = self.tree.selection()
+        
         if not selected_item:
             messagebox.showwarning("Advertencia", "Seleccione un turno para completar.")
             return
 
-        turno = self.tree.item(selected_item)["values"][0]
+        try:
+            turno = self.tree.item(selected_item)["values"][0]  # Obtiene el número de turno seleccionado
+        except IndexError:
+            messagebox.showerror("Error", "El turno seleccionado no es válido.")
+            return
+
         connection = get_connection()
+        
         if connection:
             try:
                 cursor = connection.cursor()
 
-                # Verificar el estado del turno
+                # Verificar si el turno aún existe
                 cursor.execute("SELECT estado FROM turnos WHERE numero_turno = ?", (turno,))
                 estado = cursor.fetchone()
 
-                if not estado or estado[0] != "atendiendo":
+                if not estado:
+                    messagebox.showerror("Error", f"El turno {turno} no existe en la base de datos.")
+                    return
+
+                if estado[0] != "atendiendo":
                     messagebox.showwarning("Advertencia", "El turno debe estar en estado 'atendiendo'.")
                     return
 
                 # Marcar turno actual como completado
                 cursor.execute(
-                    "UPDATE turnos SET estado = 'completado', hora_termino = GETDATE() WHERE numero_turno = ?", (turno,))
+                    "UPDATE turnos SET estado = 'completado', hora_termino = CONVERT(TIME, SYSDATETIME()) WHERE numero_turno = ?", 
+                    (turno,)
+                )
 
                 # Buscar y llamar automáticamente al próximo turno más antiguo
                 cursor.execute("""
                     SELECT TOP 1 numero_turno, ventanilla 
                     FROM turnos 
                     WHERE estado NOT IN ('completado', 'cancelado', 'atendiendo') 
-                    AND CONVERT(DATE, fecha_hora) = CONVERT(DATE, GETDATE()) 
-                    ORDER BY fecha_hora ASC 
+                    ORDER BY fecha_hora ASC;
                 """)
                 next_turno = cursor.fetchone()
 
@@ -485,7 +498,12 @@ class AdminPanel:
 
                     # Asignar el próximo turno a la misma ventanilla
                     cursor.execute(
-                        "UPDATE turnos SET estado = 'atendiendo', ventanilla = ?, hora_atencion = GETDATE() WHERE numero_turno = ?", 
+                        """UPDATE turnos 
+                            SET estado = 'atendiendo', 
+                                ventanilla = ?, 
+                                hora_atencion = CONVERT(TIME, SYSDATETIME()) 
+                            WHERE numero_turno = ?
+                        """, 
                         (ventanilla_actual, next_turno[0])
                     )
                     connection.commit()
@@ -494,8 +512,9 @@ class AdminPanel:
                     connection.commit()
                     messagebox.showinfo("Información", f"Turno {turno} completado. No hay más turnos pendientes.")
 
-                #Selección del turno
-                self.tree.selection_set(selected_item)
+                # Verificar si el turno aún está en Treeview antes de seleccionarlo
+                if self.tree.exists(selected_item):
+                    self.tree.selection_set(selected_item)
 
                 self.cargar_turnos()
 
@@ -505,6 +524,8 @@ class AdminPanel:
             finally:
                 cursor.close()
                 connection.close()
+
+
 
 
 
@@ -521,23 +542,20 @@ class AdminPanel:
         if connection:
             try:
                 cursor = connection.cursor()
-                # Verificar el estado del turno
+                # Obtener el estado y la ventanilla del turno
                 cursor.execute("SELECT estado, ventanilla FROM turnos WHERE numero_turno = ?", (turno,))
                 resultado = cursor.fetchone()
-                cursor.execute("SELECT estado FROM turnos WHERE numero_turno = ?", (turno,))
-                estado = cursor.fetchone()
 
-                if not estado or estado[0] != "atendiendo":
+                if not resultado or resultado[0] != "atendiendo":
                     messagebox.showwarning("Advertencia", "Solo se pueden cancelar turnos que estén en estado 'atendiendo'.")
                     return
+
                 ventanilla = resultado[1]  # Obtener la ventanilla del turno cancelado
 
                 cursor.execute("UPDATE turnos SET estado = 'cancelado' WHERE numero_turno = ?", (turno,))
                 connection.commit()
                 messagebox.showinfo("Éxito", f"Turno {turno} cancelado.")
                 self.cargar_turnos()
-
-
 
                 # Buscar el siguiente turno más temprano
                 cursor.execute("""
@@ -560,11 +578,6 @@ class AdminPanel:
 
                 self.cargar_turnos()  # Actualizar la interfaz
 
-
-
-
-
-
             except Exception as e:
                 connection.rollback()
                 messagebox.showerror("Error", f"Error al cancelar turno: {e}")
@@ -574,6 +587,7 @@ class AdminPanel:
 
 
     def mostrar_cancelados(self):
+        """Muestra la ventana con la lista de turnos cancelados."""
         # Crear ventana emergente
         self.ventana_cancelados = tk.Toplevel(self.root)
         self.ventana_cancelados.title("Turnos Cancelados")
@@ -587,20 +601,17 @@ class AdminPanel:
 
         # Cargar ícono para la ventana de turnos cancelados
         try:
-            icon_path = "C:/Users/marie/OneDrive/Escritorio/SISTEMA/Sistema_muni_g2/assets/logo.ico"
+            icon_path = "C:/Users/Max/Desktop/Sistema_muni_g2-main/assets/logo.ico"
             self.ventana_cancelados.iconbitmap(icon_path)
         except Exception as e:
             print(f"Error al cargar el ícono de la ventana: {e}")
 
-        
         # Título
         tk.Label(
             cancelled_frame, 
             text="Turnos Cancelados", 
             font=("Arial", 12, "bold")
         ).pack(pady=5)
-
-        
 
         # Crear tabla con scrollbar
         cancelled_tree_frame = tk.Frame(cancelled_frame)
@@ -636,7 +647,32 @@ class AdminPanel:
         ).pack(pady=10)
 
         # Cargar datos de turnos cancelados
-        self.cargar_turnos_cancelados()
+        connection = get_connection()
+        if connection:
+            try:
+                cursor = connection.cursor()
+                query = """
+                    SELECT numero_turno, dni_ruc, nombres_empresa, motivo 
+                    FROM turnos WHERE estado = 'cancelado'
+                """
+                cursor.execute(query)
+                turnos_cancelados = cursor.fetchall()
+
+                # Limpiar la tabla antes de insertar nuevos datos
+                for row in self.cancelled_tree.get_children():
+                    self.cancelled_tree.delete(row)
+
+                # Insertar los datos en la tabla (quitando los signos ' ' alrededor)
+                for turno in turnos_cancelados:
+                    self.cancelled_tree.insert("", "end", values=[str(item) for item in turno])
+
+            except Exception as e:
+                messagebox.showerror("Error", f"Error al cargar turnos cancelados: {e}")
+            finally:
+                cursor.close()
+                connection.close()
+
+
 
     def limpiar_tablas_diariamente(self):
         # Verificar si es un nuevo día
