@@ -15,7 +15,7 @@ class MainWindow:
         self.root.configure(bg="#FFFFFF")
 
         # Cambiar el ícono de la ventana
-        icon_path = r"C:\Users\marie\OneDrive\Escritorio\SISTEMA\Sistema_muni_g2\assets\logo.ico"
+        icon_path = r"C:\Users\Max\Desktop\Sistema_muni_g2-main\assets\logo.ico"
         try:
             self.root.iconbitmap(icon_path)
         except Exception as e:
@@ -34,7 +34,7 @@ class MainWindow:
 
         # Logo
         try:
-            logo_path = r"C:\Users\marie\OneDrive\Escritorio\SISTEMA\Sistema_muni_g2\assets\logo.png"
+            logo_path = r"C:\Users\Max\Desktop\Sistema_muni_g2-main\assets\logo.png"
             logo_image = Image.open(logo_path)
             logo_image = logo_image.resize((120, 150), Image.Resampling.LANCZOS)
             self.logo_main = ImageTk.PhotoImage(logo_image)
@@ -48,38 +48,56 @@ class MainWindow:
 
         # Botones de opciones
         buttons_frame = tk.Frame(left_frame, bg="#FFFFFF")
-        buttons_frame.pack(pady=20)
+        buttons_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)  
 
         self.motivo_info = {
-            "CONSULTAS": ("C"),
-            "DEUDAS": ("S"),
-            "DOCUMENTOS": ("D"),
-            "MULTAS": ("M"),
-            "PAGOS": ("P"),
-            "OTROS": ("O")  
+            "CONSULTAS": ("C", r"C:\Users\Max\Desktop\Sistema_muni_g2-main\assets\iconsultas.png"),
+            "DEUDAS": ("S", r"C:\Users\Max\Desktop\Sistema_muni_g2-main\assets\ideudas.png"),
+            "DOCUMENTOS": ("D", r"C:\Users\Max\Desktop\Sistema_muni_g2-main\assets\idocumentos.png"),
+            "MULTAS": ("M", r"C:\Users\Max\Desktop\Sistema_muni_g2-main\assets\imultas.png"),
+            "PAGOS": ("P", r"C:\Users\Max\Desktop\Sistema_muni_g2-main\assets\ipagos.png"),
+            "OTROS": ("O", r"C:\Users\Max\Desktop\Sistema_muni_g2-main\assets\iotros.png")
         }
 
         # Declaramos una variable para almacenar el motivo seleccionado
         self.motivo_var = tk.StringVar()  # Esta será usada para almacenar el motivo seleccionado
-    
-        
-        #for idx, (text, _) in enumerate(motivo):
-        for idx, (text, (prefijo)) in enumerate(self.motivo_info.items()):
-            btn = tk.Button(
-                buttons_frame,
-                text=text,
-                bg="#008000",
-                fg="white",
-                font=("Sora SemiBold", 16, "bold"),
-                width=27,
-                height=2,
-                relief="flat",
-                command=lambda t=text: self.abrir_ventana_dni(t),
-            )
-            btn.grid(row=idx // 2, column=idx % 2, padx=20, pady=20)
-             # Efecto hover
-            btn.bind("<Enter>", lambda event, button=btn: button.config(bg="#45a049"))  # Cambio de color cuando el cursor entra
-            btn.bind("<Leave>", lambda event, button=btn: button.config(bg="#008000"))  # Vuelve a color original al salir
+
+        # Crear botones con imágenes más grandes y espacio entre la imagen y el texto
+        for idx, (text, (prefijo, image_path)) in enumerate(self.motivo_info.items()):
+            try:
+                # Cargar la imagen
+                image = Image.open(image_path)
+                image = image.resize((110, 110), Image.Resampling.LANCZOS)  # Redimensionar la imagen a 80x80 píxeles
+                photo = ImageTk.PhotoImage(image)
+                # Crear el botón con la imagen arriba del texto y más espacio
+                btn = tk.Button(
+                    buttons_frame,
+                    text=text,
+                    image=photo,
+                    compound=tk.TOP,  # Colocar la imagen arriba del texto
+                    bg="#008000",
+                    fg="white",
+                    font=("Sora SemiBold", 16, "bold"),  # Fuente más grande
+                    width=200,  # Ajustar el ancho del botón
+                    height=150,  # Ajustar la altura del botón para acomodar la imagen y el texto
+                    relief="flat",
+                    command=lambda t=text: self.abrir_ventana_dni(t),
+                    padx=10,  # Espacio horizontal interno
+                    pady=10,  # Espacio vertical interno
+                )
+                btn.image = photo  # Guardar una referencia para evitar que la imagen sea eliminada por el recolector de basura
+                btn.grid(row=idx // 3, column=idx % 3, padx=20, pady=20, sticky="nsew")  # Organizar en una cuadrícula de 3 columnas
+                # Efecto hover
+                btn.bind("<Enter>", lambda event, button=btn: button.config(bg="#45a049"))  # Cambio de color cuando el cursor entra
+                btn.bind("<Leave>", lambda event, button=btn: button.config(bg="#008000"))  # Vuelve a color original al salir
+            except Exception as e:
+                print(f"Error al cargar la imagen para {text}: {e}")
+
+        # Ajustar el peso de las filas y columnas para que los botones se expandan correctamente
+        for i in range(2):  # 2 filas
+            buttons_frame.grid_rowconfigure(i, weight=1)
+        for j in range(3):  # 3 columnas
+            buttons_frame.grid_columnconfigure(j, weight=1)
 
         # Marco derecho para la imagen adicional (Walter_S)
         right_frame = tk.Frame(main_frame, bg="#FFFFFF")
@@ -90,7 +108,7 @@ class MainWindow:
 
     def ajustar_imagen_walter(self, right_frame):
         try:
-            image_path = r"C:\Users\marie\OneDrive\Escritorio\SISTEMA\Sistema_muni_g2\assets\Walter_S.png"
+            image_path =  r"C:\Users\Max\Desktop\Sistema_muni_g2-main\assets\Walter_S.png"
             additional_image = Image.open(image_path)
 
             # Obtener la altura y ancho total de la ventana
@@ -125,10 +143,10 @@ class MainWindow:
         self.top.geometry("600x500")
         self.top.configure(bg="#FFFFFF")
 
-         # Establecer el ícono de la ventana emergente
-        icon_path = r"C:\Users\marie\OneDrive\Escritorio\SISTEMA\Sistema_muni_g2\assets\logo.ico"
+        # Establecer el ícono de la ventana emergente
+        icon_path = r"C:\Users\Max\Desktop\Sistema_muni_g2-main\assets\logo.ico"
         try:
-            self.top.iconbitmap(icon_path)  # Establece el ícono para la ventana emergente
+            self.top.iconbitmap(icon_path)
         except Exception as e:
             print(f"Error al cargar el ícono en la ventana emergente: {e}")
 
@@ -137,7 +155,7 @@ class MainWindow:
 
         # Cargar y mostrar el logo entre los textos
         try:
-            logo_path = r"C:\Users\marie\OneDrive\Escritorio\SISTEMA\Sistema_muni_g2\assets\logo.png"
+            logo_path = r"C:\Users\Max\Desktop\Sistema_muni_g2-main\assets\logo.png"
             logo_image = Image.open(logo_path)
             logo_image = logo_image.resize((120, 150), Image.Resampling.LANCZOS)
             self.logo_popup = ImageTk.PhotoImage(logo_image)
@@ -155,7 +173,8 @@ class MainWindow:
         self.dni_ruc_entry.bind("<FocusOut>", self.reemplazar_texto_dni)
 
         # Botón para generar turno, pasando el motivo
-        prefijo  = self.motivo_info[motivo]
+        # Aquí está el cambio principal: obtenemos solo el prefijo de la tupla
+        prefijo = self.motivo_info[motivo][0]  # Tomamos solo el primer elemento (el prefijo)
         tk.Button(
             self.top,
             text="Generar Turno",
@@ -351,7 +370,7 @@ class MainWindow:
         self.top_registro.geometry("600x500")
         self.top_registro.configure(bg="#FFFFFF")
 
-        self.top_registro.iconbitmap(r"C:\Users\marie\OneDrive\Escritorio\SISTEMA\Sistema_muni_g2\assets\logo.ico")
+        self.top_registro.iconbitmap(r"C:\Users\Max\Desktop\Sistema_muni_g2-main\assets\logo.ico")
         # Título
         tk.Label(self.top_registro, text="Registro de Usuario", font=("Sora SemiBold", 16), bg="#FFFFFF").pack(pady=10)
 
@@ -564,7 +583,7 @@ class MainWindow:
 
 
          # Cargar la imagen
-        logo_path = r"C:\Users\marie\OneDrive\Escritorio\SISTEMA\Sistema_muni_g2\assets\logo.png"
+        logo_path = r"C:\Users\Max\Desktop\Sistema_muni_g2-main\assets\logo.png"
         try:
             logo = Image.open(logo_path)
 
