@@ -23,36 +23,29 @@ class VisualizePanel:
             print(f"Error al cargar el ícono de la ventana: {e}")
 
         # Header superior
-        self.header_frame = tk.Frame(root, bg="#D9D9D9")
-        self.header_frame.place(relx=0, rely=0, relwidth=0.63, relheight=0.2)
+        self.header_frame = tk.Frame(root, bg="#E0E0E0")
+        self.header_frame.place(relx=0, rely=0, relwidth=0.63, relheight=0.16)
 
         # Logo de la Municipalidad dentro del header
         try:
             logo_path = r"C:\Users\marie\OneDrive\Escritorio\SISTEMA\Sistema_muni_g2\assets\logo_completo.png"
             logo_image = Image.open(logo_path).resize((300, 100), Image.Resampling.LANCZOS)
             self.logo = ImageTk.PhotoImage(logo_image)
-            logo_label = tk.Label(self.header_frame, image=self.logo, bg="#D9D9D9")
+            logo_label = tk.Label(self.header_frame, image=self.logo, bg="#E0E0E0")
             logo_label.place(relx=0.01, rely=0.4, anchor="w")
         except Exception as e:
             print(f"Error al cargar el logo: {e}")
 
         # Reloj e información de hora
-        self.clock_frame = tk.Frame(self.header_frame, bg="#D9D9D9")
-        self.clock_frame.place(relx=0.7, rely=0.01, relwidth=0.4, relheight=0.8)
+        self.clock_frame = tk.Frame(self.header_frame, bg="#E0E0E0")
+        self.clock_frame.place(relx=0.65, rely=0.01, relwidth=0.4, relheight=0.8)
 
-        try:
-            clock_image_path = r"C:\Users\marie\OneDrive\Escritorio\SISTEMA\Sistema_muni_g2\assets\reloj.png"
-            clock_image = Image.open(clock_image_path).resize((60, 60), Image.Resampling.LANCZOS)
-            self.clock_icon = ImageTk.PhotoImage(clock_image)
-            clock_label = tk.Label(self.clock_frame, image=self.clock_icon, bg="#D9D9D9")
-            clock_label.place(relx=0.04, rely=0.5, anchor="w")
-        except Exception as e:
-            print(f"Error al cargar la imagen del reloj: {e}")
+        
 
         self.time_label = tk.Label(
             self.clock_frame,
             font=("Arial", 30, "bold"),
-            bg="#D9D9D9",
+            bg="#E0E0E0",
             fg="#000000",
             anchor="w",
         )
@@ -61,7 +54,7 @@ class VisualizePanel:
         self.date_label = tk.Label(
             self.clock_frame,
             font=("Arial", 16, "bold"),
-            bg="#D9D9D9",
+            bg="#E0E0E0",
             fg="#000000",
             anchor="w",
         )
@@ -69,48 +62,60 @@ class VisualizePanel:
         self.update_time()
 
         # Frame con el fondo #B9C5D7 que ocupa el espacio debajo del header
-        self.background_frame = tk.Frame(root, bg="#B9C5D7")
-        self.background_frame.place(relx=0, rely=0.2, relwidth=0.63, relheight=0.8)  # Rellena el espacio debajo del header
+        self.background_frame = tk.Frame(root)
+        self.background_frame.place(relx=0, rely=0.15, relwidth=0.63, relheight=0.85)
 
-        # Turno actual
-        self.turno_frame = tk.Frame(root, bg="#B9C5D7")
-        self.turno_frame.place(relx=0, rely=0.2, relwidth=0.63, relheight=0.6)
+        # 📌 Cargar imagen de fondo para todo el frame
+        try:
+            bg_image = Image.open(r"C:\Users\marie\OneDrive\Escritorio\SISTEMA\Sistema_muni_g2\assets\plaza.png")
+            bg_image = bg_image.resize(
+                (int(self.root.winfo_screenwidth() * 0.63), int(self.root.winfo_screenheight() * 0.8)),
+                Image.Resampling.LANCZOS
+            )
+            self.bg_photo = ImageTk.PhotoImage(bg_image)
+
+            self.bg_label = tk.Label(self.background_frame, image=self.bg_photo)
+            self.bg_label.place(relwidth=1, relheight=1)
+            self.bg_label.lower()
+        except Exception as e:
+            print(f"Error al cargar la imagen de fondo: {e}")
+
 
         self.turno_label = tk.Label(
-            self.turno_frame,
+            self.background_frame,
             text="Turno",
             font=("Arial", 40, "bold"),
-            bg="#49A11A",
+            bg="#0056B3",
             fg="#FFFFFF",
         )
-        self.turno_label.place(relx=0.1, rely=0.1, relwidth=0.4, relheight=0.25)
+        self.turno_label.place(relx=0.1, rely=0.05, relwidth=0.4, relheight=0.25)
 
         self.ventanilla_label = tk.Label(
-            self.turno_frame,
+            self.background_frame,
             text="Ventanilla",
             font=("Arial", 40, "bold"),
-            bg="#87CB63",
-            fg="#FFFFFF",
+            bg="#3B98FF",
+            fg="white",
         )
-        self.ventanilla_label.place(relx=0.5, rely=0.1, relwidth=0.4, relheight=0.25)
+        self.ventanilla_label.place(relx=0.5, rely=0.05, relwidth=0.4, relheight=0.25)
 
         self.turno_actual_label = tk.Label(
-            self.turno_frame,
+            self.background_frame,
             text="--",
             font=("Arial", 80, "bold"),
-            bg="#49A11A",
-            fg="#000000",
+            bg="#0056B3",
+            fg="white",
         )
-        self.turno_actual_label.place(relx=0.1, rely=0.38, relwidth=0.4, relheight=0.5)
+        self.turno_actual_label.place(relx=0.1, rely=0.32, relwidth=0.4, relheight=0.4)
 
         self.ventanilla_actual_label = tk.Label(
-            self.turno_frame,
+            self.background_frame,
             text="-",
             font=("Arial", 80, "bold"),
-            bg="#87CB63",
-            fg="#000000",
+            bg="#3B98FF",
+            fg="white",
         )
-        self.ventanilla_actual_label.place(relx=0.5, rely=0.38, relwidth=0.4, relheight=0.5)
+        self.ventanilla_actual_label.place(relx=0.5, rely=0.32, relwidth=0.4, relheight=0.4)
 
 
         # Próximos turnos con bordes personalizados ################################################################################### FONDO PARA LA TABLA DE SIGUIENTES TURNOS
@@ -124,14 +129,14 @@ class VisualizePanel:
             self.siguientes_frame,
             text="Siguiente turno",
             font=("Arial", 30, "bold"),
-            bg="#49A11A",
+            bg="#0056B3",
             fg="#FFFFFF",
         )
         self.siguientes_label.pack(fill="x")
 
         self.siguientes_turnos_frames = []
         for i in range(4):
-            turno_frame = tk.Frame(self.siguientes_frame, bg="#FFFFFF", highlightbackground="#49A11A", highlightthickness=2)
+            turno_frame = tk.Frame(self.siguientes_frame, bg="#FFFFFF", highlightbackground="#0056B3", highlightthickness=2)
             turno_frame.pack(fill="x", expand=True, pady=2)
 
             turno_label = tk.Label(
@@ -145,7 +150,7 @@ class VisualizePanel:
             turno_label.pack(pady=10)
 
             # Crear borde verde grueso al final del cuadro
-            borde_inferior = tk.Frame(turno_frame, bg="#49A11A", height=40)
+            borde_inferior = tk.Frame(turno_frame, bg="#0056B3", height=40)
             borde_inferior.pack(fill="x", side="bottom")
 
             # Etiqueta para el estado (encima del borde verde grueso)
@@ -153,7 +158,7 @@ class VisualizePanel:
                 turno_frame,
                 text="--",  # Texto inicial vacío, se actualizará dinámicamente
                 font=("Arial", 12, "italic"),
-                bg="#49A11A",
+                bg="#0056B3",
                 justify="center",
                 wraplength=480,
                 fg="#FFFFFF"  # Color a juego con el borde
@@ -169,16 +174,16 @@ class VisualizePanel:
             })
 
         # Footer con nombre
-        self.footer_frame = tk.Frame(root, bg="#49A11A")
-        self.footer_frame.place(relx=0.063, rely=0.746, relwidth=0.505, relheight=0.2)
+        self.footer_frame = tk.Frame(root, bg="#0056B3")
+        self.footer_frame.place(relx=0.063, rely=0.78, relwidth=0.505, relheight=0.2)
         # el 0.73 es para el espaciado
 
         self.nombre_label = tk.Label(
             self.footer_frame,
             text="--",
             font=("Arial", 35, "bold"), #25 por si los nombres son muy largos      30 para los nombres con longitud normal 
-            bg="#49A11A",
-            fg="#000000",
+            bg="#0056B3",  ##0056B3
+            fg="white",
             anchor="center",
             justify="center",
             wraplength=500
@@ -207,11 +212,23 @@ class VisualizePanel:
             try:
                 cursor = connection.cursor()
                 # Consulta para turno actual
-                cursor.execute("SELECT TOP 1 numero_turno, ventanilla, nombres_empresa FROM turnos WHERE estado = 'atendiendo' ORDER BY hora_atencion DESC")
+                cursor.execute("""
+                    SELECT TOP 1 numero_turno, ventanilla, nombres_empresa 
+                    FROM turnos 
+                    WHERE estado = 'atendiendo' 
+                    AND CONVERT(DATE, fecha_hora) = CONVERT(DATE, GETDATE())
+                    ORDER BY hora_atencion DESC
+                """)
                 turno_actual = cursor.fetchone()
 
                 # Consulta para próximos turnos
-                cursor.execute("SELECT TOP 4 numero_turno, nombres_empresa FROM turnos WHERE estado = 'espera' ORDER BY id ASC")
+                cursor.execute("""
+                    SELECT TOP 4 numero_turno, nombres_empresa 
+                    FROM turnos 
+                    WHERE estado = 'espera' 
+                    AND CONVERT(DATE, fecha_hora) = CONVERT(DATE, GETDATE())     
+                    ORDER BY id ASC
+                """)
                 siguientes = cursor.fetchall()
 
                 # Actualizar turno actual
