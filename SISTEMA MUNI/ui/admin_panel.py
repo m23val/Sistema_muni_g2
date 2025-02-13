@@ -67,7 +67,7 @@ class AdminPanel:
         logo_admin_label = tk.Label(header_frame, image=self.logo_admin, bg="#0056B3")
         logo_admin_label.pack(side=tk.RIGHT, padx=0)
 
-        regresar_button = tk.Button(header_frame, text="Regresar", font=("Arial", 12, "bold"), bg="#FF8000", fg="white", command=self.regresar, padx=10, pady=5)
+        regresar_button = tk.Button(header_frame, text="Regresar", font=("Arial", 12, "bold"), bg="#00C400", fg="white", command=self.regresar, padx=10, pady=5)
         regresar_button.pack(side=tk.LEFT, padx=20)
 
         tk.Label(root, text="Atención al ciudadano", font=("Arial", 16, "bold"), bg="#F8F8F8", fg="#333333").pack(pady=10)
@@ -338,10 +338,7 @@ class AdminPanel:
                         if self.tree.item(item)["values"][0] == selected_turno:
                             self.tree.selection_set(item)
                             break
-                #except Exception:
-                #    pass #Si el turno ya no está solo pasar
-
-
+ 
 
     def llamar_turno(self):
         connection = get_connection()
@@ -414,7 +411,7 @@ class AdminPanel:
         if not selected_item:
             messagebox.showwarning("Advertencia", "Seleccione un turno para completar.")
             return
-
+        
         try:
             turno = self.tree.item(selected_item)["values"][0]  # Obtiene el número de turno seleccionado
         except IndexError:
@@ -434,8 +431,12 @@ class AdminPanel:
                 if not estado:
                     messagebox.showerror("Error", f"El turno {turno} no existe en la base de datos.")
                     return
+                
 
-                if estado[0] != "atendiendo":
+                estado_actual = estado[0].strip().lower()
+                print(f"Estado obtenido después de limpiar: '{estado_actual}'")  # Depuración
+
+                if estado_actual != "atendiendo":
                     messagebox.showwarning("Advertencia", "El turno debe estar en estado 'atendiendo'.")
                     return
 
@@ -506,18 +507,23 @@ class AdminPanel:
                 # Verificar el estado del turno
                 cursor.execute("SELECT estado, ventanilla FROM turnos WHERE numero_turno = ?", (turno,))
                 resultado = cursor.fetchone()
-                cursor.execute("SELECT estado FROM turnos WHERE numero_turno = ?", (turno,))
-                estado = cursor.fetchone()
+                #cursor.execute("SELECT estado FROM turnos WHERE numero_turno = ?", (turno,))
+                #estado = cursor.fetchone()
 
-                if not estado or estado[0] != "atendiendo":
+                if not resultado:
                     messagebox.showwarning("Advertencia", "Solo se pueden cancelar turnos que estén en estado 'atendiendo'.")
                     return
+                estado_actual = resultado[0].strip().lower()
                 ventanilla = resultado[1]  # Obtener la ventanilla del turno cancelado
 
+
+                if estado_actual != "atendiendo":
+                    messagebox.showwarning("Advertencia", "Solo se pueden cancelar turnos que estén en estado 'atendiendo'.")
+                    return
                 cursor.execute("UPDATE turnos SET estado = 'cancelado' WHERE numero_turno = ?", (turno,))
                 connection.commit()
                 messagebox.showinfo("Éxito", f"Turno {turno} cancelado.")
-                self.cargar_turnos()
+                #self.cargar_turnos()
 
 
 
