@@ -2,6 +2,9 @@ import tkinter as tk
 from tkinter import messagebox, Toplevel
 from db.connection import get_connection
 from datetime import datetime
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from PIL import Image
 from PIL import Image, ImageTk, ImageWin
 import win32print
 import win32ui
@@ -30,7 +33,8 @@ class MainWindow:
         left_frame.pack(side="left", fill="both", expand=True, padx=20, pady=20)
 
         # Título
-        tk.Label(left_frame, text="GESTIÓN DE TURNOS", font=("Sora SemiBold", 18), bg="#FFFFFF").pack(pady=10)
+        tk.Label(left_frame, text="GESTIÓN DE TURNOS", font=("Sora", 18, "bold"), bg="#FFFFFF").pack(pady=10)
+
 
         # Logo
         try:
@@ -44,7 +48,8 @@ class MainWindow:
             print(f"Error al cargar la imagen del logo: {e}")
 
         # Título
-        tk.Label(left_frame, text="Seleccionar motivo:", font=("Sora Light", 18), bg="#FFFFFF").pack(pady=10)
+        tk.Label(left_frame, text="Seleccionar motivo:", font=("Sora", 17, "bold"), bg="#FFFFFF").pack(pady=10)
+
 
         # Botones de opciones
         buttons_frame = tk.Frame(left_frame, bg="#FFFFFF")
@@ -75,7 +80,7 @@ class MainWindow:
                     text=text,
                     image=photo,
                     compound=tk.TOP,  # Colocar la imagen arriba del texto
-                    bg="#008000",
+                    bg="#0056B3",
                     fg="white",
                     font=("Sora SemiBold", 16, "bold"),  # Fuente más grande
                     width=200,  # Ajustar el ancho del botón
@@ -88,8 +93,8 @@ class MainWindow:
                 btn.image = photo  # Guardar una referencia para evitar que la imagen sea eliminada por el recolector de basura
                 btn.grid(row=idx // 3, column=idx % 3, padx=20, pady=20, sticky="nsew")  # Organizar en una cuadrícula de 3 columnas
                 # Efecto hover
-                btn.bind("<Enter>", lambda event, button=btn: button.config(bg="#45a049"))  # Cambio de color cuando el cursor entra
-                btn.bind("<Leave>", lambda event, button=btn: button.config(bg="#008000"))  # Vuelve a color original al salir
+                btn.bind("<Enter>", lambda event, button=btn: button.config(bg="#5996d9"))  # Cambio de color cuando el cursor entra
+                btn.bind("<Leave>", lambda event, button=btn: button.config(bg="#0056B3"))  # Vuelve a color original al salir
             except Exception as e:
                 print(f"Error al cargar la imagen para {text}: {e}")
 
@@ -108,7 +113,7 @@ class MainWindow:
 
     def ajustar_imagen_walter(self, right_frame):
         try:
-            image_path =  r"C:\Users\Max\Desktop\Sistema_muni_g2-main\assets\Walter_S.png"
+            image_path =  r"C:\Users\Max\Desktop\Sistema_muni_g2-main\assets\plaza.png"
             additional_image = Image.open(image_path)
 
             # Obtener la altura y ancho total de la ventana
@@ -178,7 +183,7 @@ class MainWindow:
         tk.Button(
             self.top,
             text="Generar Turno",
-            bg="#008000",
+            bg="#0056B3",
             fg="white",
             font=("Arial", 14),
             command=lambda: self.generar_turno(motivo, prefijo),
@@ -344,7 +349,7 @@ class MainWindow:
             btn = tk.Button(
                 self.top_motivo,
                 text=opcion,
-                bg="#008000",
+                bg="#0056B3",
                 fg="white",
                 font=("Sora SemiBold", 14, "bold"),
                 width=27,
@@ -384,11 +389,12 @@ class MainWindow:
         tk.Button(
             self.top_registro,
             text="Siguiente",
-            bg="#008000",
+            bg="#0056B3",
             fg="white",
             font=("Arial", 14),
             command=self.mostrar_formulario_registro
         ).pack(pady=20)
+        
 
     def mostrar_formulario_registro(self):
         """Muestra el formulario de acuerdo al tipo de documento (DNI o RUC)."""
@@ -429,44 +435,61 @@ class MainWindow:
         tk.Button(
             self.top_registro,
             text="Registrar",
-            bg="#008000",
+            bg="#0056B3",
             fg="white",
             font=("Arial", 14),
             #command=lambda: self.guardar_registro_usuario(self.dni_ruc_entry.get())
             command=self.guardar_registro_usuario
         ).pack(pady=20)
 
+
     def guardar_registro_usuario(self):
         """Guardar el nuevo registro en la base de datos."""
         tipo_id = self.tipo_id_var.get()
         
         if tipo_id == "dni":
-            dni = self.dni_entry.get()
-            apellido = self.apellido_entry.get()
-            nombre = self.nombre_entry.get()
+            dni = self.dni_entry.get().strip()  # Eliminar espacios en blanco
+            apellido = self.apellido_entry.get().strip()
+            nombre = self.nombre_entry.get().strip()
             nombres_completos = f"{apellido} {nombre}"  # Concatenar apellido y nombre para el DNI
 
-            tabla = "registros_dni"
-            columna_id = "dni"
-            columna_nombres = "nombres"
+            # Validar que el DNI tenga 8 dígitos
+            if len(dni) != 8 or not dni.isdigit():
+                messagebox.showwarning("Advertencia", "¡Ups! Al parecer ingresó un número de RUC en el apartado de DNI. Por favor, registre su número de DNI (8 dígitos) nuevamente.")
+                self.top_registro.destroy()  # Cerrar la ventana de registro
+                if hasattr(self, 'top'):
+                    self.top.destroy()  # Cerrar la ventana de ingreso de DNI/RUC
+                return
 
             # Validar que el campo de apellidos y nombres no esté vacío
             if not apellido or not nombre:
                 messagebox.showerror("Error", "Por favor ingrese los apellidos y nombres.")
                 return
 
-        elif tipo_id == "ruc":
-            ruc = self.ruc_entry.get()
-            empresa = self.empresa_entry.get()
+            tabla = "registros_dni"
+            columna_id = "dni"
+            columna_nombres = "nombres"
 
-            tabla = "registros_ruc"
-            columna_id = "ruc"
-            columna_nombres = "empresa"
+        elif tipo_id == "ruc":
+            ruc = self.ruc_entry.get().strip()
+            empresa = self.empresa_entry.get().strip()
+
+            # Validar que el RUC tenga 11 dígitos
+            if len(ruc) != 11 or not ruc.isdigit():
+                messagebox.showwarning("Advertencia", "¡Ups! Al parecer ingresó un número de DNI en el apartado de RUC. Por favor, registre su número de RUC (11 dígitos) nuevamente.")
+                self.top_registro.destroy()  # Cerrar la ventana de registro
+                if hasattr(self, 'top'):
+                    self.top.destroy()  # Cerrar la ventana de ingreso de DNI/RUC
+                return
 
             # Validar que el campo de empresa no esté vacío
             if not empresa:
                 messagebox.showerror("Error", "Por favor ingrese el nombre de la empresa.")
                 return
+
+            tabla = "registros_ruc"
+            columna_id = "ruc"
+            columna_nombres = "empresa"
 
         # Realizar la inserción en la base de datos
         connection = get_connection()
@@ -489,9 +512,7 @@ class MainWindow:
 
                 if tipo_id == "dni":
                     # Insertar en la tabla de registros_dni
-
                     cursor.execute(f"""
-                                   
                         INSERT INTO registros_dni (dni, nombres)
                         VALUES (?, ?)
                     """, (dni, nombres_completos))
@@ -506,7 +527,9 @@ class MainWindow:
                 connection.commit()
 
                 messagebox.showinfo("Registro Exitoso", "¡Su registro fue exitoso!")
-                self.top_registro.destroy()  # Cerrar ventana de registro
+                self.top_registro.destroy()  # Cerrar la ventana de registro
+                if hasattr(self, 'top'):
+                    self.top.destroy()  # Cerrar la ventana de ingreso de DNI/RUC
 
             except Exception as e:
                 connection.rollback()
@@ -518,162 +541,100 @@ class MainWindow:
         else:
             messagebox.showerror("Error", "No se pudo conectar a la base de datos")
 
-
-
+    
 
 ################################################################################################################################################
 
 
+    
+
     def imprimir_turno(self, turno, motivo, detalle, dni_ruc, hora_actual):
-        """Función para imprimir el ticket de turno con formato mejorado."""
-        
-        # Obtener impresora predeterminada
-        printer_name = "Microsoft Print to PDF"   ### Para visualizar en pdf
-        #printer_name = win32print.GetDefaultPrinter()
-        hprinter = win32print.OpenPrinter(printer_name)
-        printer_info = win32print.GetPrinter(hprinter, 2)
-        
-        # Crear un contexto de impresión
-        pdc = win32ui.CreateDC()
-        pdc.CreatePrinterDC(printer_name)
-        
-        # Iniciar impresión
-        pdc.StartDoc('Turno')
-        pdc.StartPage()
+        """Función para generar un ticket de turno en PDF con imagen de fondo."""
 
-        # Configurar el tamaño de hoja A4 en puntos (Ancho x Alto)
-        ancho_hoja, alto_hoja = pdc.GetDeviceCaps(8), pdc.GetDeviceCaps(10)
+        # Ruta para guardar el PDF
+        pdf_path = r"C:\Users\Max\Desktop\ticket_turno.pdf"
 
-        # Definir fuentes de diferentes tamaños
-        font_normal = win32ui.CreateFont({
-            "name": "Arial",
-            "height": 80,  # Tamaño grande para mejor visibilidad
-            "weight": 700,  # Negrita
-        })
-        font_grande = win32ui.CreateFont({
-            "name": "Arial",
-            "height": 200,  # Tamaño muy grande para el número de turno
-            "weight": 900,  # Negrita intensa
-        })
+        # Crear PDF
+        c = canvas.Canvas(pdf_path, pagesize=A4)
+        ancho_hoja, alto_hoja = A4  # Dimensiones de la página
 
-        font_mediana = win32ui.CreateFont({
-            "name": "Arial",
-            "height": 100,  # Tamaño intermedio
-            "weight": 200,  # Negrita
-        })
+        # Cargar la imagen de fondo
+        logo_path = r"C:\Users\Max\Desktop\Sistema_muni_g2-main\assets\logobn.png"
+        try:
+            img = Image.open(logo_path)
+            img_width, img_height = img.size
+
+            # Redimensionar imagen para que ocupe toda la página
+            ratio = ancho_hoja / img_width
+            new_height = img_height * ratio
+            c.drawImage(logo_path, 0, alto_hoja - new_height, width=ancho_hoja, height=new_height)
+        except Exception as e:
+            print(f"Error al cargar la imagen de fondo: {e}")
+
+        # Configuración de fuentes
+        x_centro = ancho_hoja / 2
 
         # Posiciones iniciales
-        x_centro = int(ancho_hoja / 2.5)  # Centrar el texto
-        y_inicio = 300  # Ajuste vertical para comenzar
-        espacio_entre_lineas = 150  # Espaciado entre líneas
+        y_inicio = 720  # Ajuste vertical para comenzar    ################# 650
+        espacio_entre_lineas = 40  # Espaciado entre líneas
 
-        
-        # Número de Turno (Formato Grande)
-        pdc.SelectObject(font_grande)
-        
+        # Texto "N° de Turno:" en la parte superior
+        c.setFont("Helvetica-Bold", 28)
+        c.drawCentredString(x_centro, y_inicio, "N° de Turno:")
+        y_inicio -= 150                                      ################ 50
 
-        # Obtener el tamaño del texto para centrarlo
-        text_size = pdc.GetTextExtent(turno)
-        x_centro_exacto = int((ancho_hoja - text_size[0])/2.5)   # Centrar horizontalmente
+        # Número de Turno grande y llamativo
+        c.setFont("Helvetica-Bold", 120)
+        c.drawCentredString(x_centro, y_inicio, turno)
+        y_inicio -= espacio_entre_lineas + 30
 
+        # DNI
+        c.setFont("Helvetica-Bold", 28)
+        c.drawCentredString(x_centro, y_inicio, f"DNI: {dni_ruc}")
+        y_inicio -= espacio_entre_lineas
 
-        pdc.TextOut(x_centro_exacto, y_inicio, f"N° de Turno: {turno}")
-        y_inicio += espacio_entre_lineas + 80  # Más espacio debajo del turno
-        
+        # Motivo
+        c.drawCentredString(x_centro, y_inicio, f"Motivo: {motivo}")
+        y_inicio -= espacio_entre_lineas
 
+        # Línea separadora
+        c.setLineWidth(2)
+        c.line(100, y_inicio, ancho_hoja - 100, y_inicio)
+        y_inicio -= espacio_entre_lineas
 
-         # Cargar la imagen
-        logo_path = r"C:\Users\Max\Desktop\Sistema_muni_g2-main\assets\logo.png"
-        try:
-            logo = Image.open(logo_path)
-
-            # Convertir a modo RGBA si tiene transparencia
-            if logo.mode in ("RGBA", "LA"):
-                fondo_blanco = Image.new("RGB", logo.size, (255, 255, 255))  # Crear fondo blanco
-                fondo_blanco.paste(logo, mask=logo.split()[3])  # Aplicar máscara alfa
-                logo = fondo_blanco  # Reemplazar la imagen con la nueva sin transparencia
-
-            # Redimensionar la imagen
-            max_width = 600
-            ratio = max_width / float(logo.width)
-            new_width = int(logo.width * ratio)
-            new_height = int(logo.height * ratio)
-            logo = logo.resize((new_width, new_height))
-
-            # Convertir imagen a modo BMP compatible
-            logo = logo.convert("RGB")
-            
-            # Crear un contexto de dispositivo compatible con la impresora
-            hdc_printer = pdc.GetHandleOutput()
-            dib = ImageWin.Dib(logo)
-            # Centrar la imagen en la hoja
-            x_centro_imagen = (ancho_hoja - new_width) // 2  # Centrar la imagen en la hoja
-            y_fin_imagen = y_inicio + new_height
-            
-            # Dibujar la imagen en la impresora
-            dib.draw(hdc_printer, (x_centro_imagen, y_inicio, x_centro_imagen + new_width, y_fin_imagen))
-            y_inicio = y_fin_imagen + 30  # Ajustar la posición después de la imagen
-
-        except Exception as e:
-            print(f"Error al cargar la imagen: {e}")
-        
+        # Fecha
+        from datetime import datetime
         fecha_actual = datetime.today().strftime('%d-%m-%Y')
-
-
-         # DNI
-        pdc.SelectObject(font_mediana)
-        x_centro_exacto = (ancho_hoja - text_size[0]) // 2
-        pdc.TextOut(x_centro, y_inicio, f"DNI: {dni_ruc}")
-        y_inicio += espacio_entre_lineas        
-
-
-        # Motivo y caja
-        
-        pdc.TextOut(x_centro, y_inicio, f"Motivo: {motivo}")
-        y_inicio += espacio_entre_lineas
-
-        # Dibujar una línea separadora
-        pdc.MoveTo(x_centro - 100, y_inicio)  # Punto de inicio de la línea
-        pdc.LineTo(x_centro + 1200, y_inicio)  # Punto final de la línea (ajustar longitud)
-        y_inicio += 40  # Espacio después de la línea
-
-        #Fecha
-        pdc.TextOut(x_centro, y_inicio, f"Fecha: {fecha_actual}")
-        y_inicio += espacio_entre_lineas
-
+        c.drawCentredString(x_centro, y_inicio, f"Fecha: {fecha_actual}")
+        y_inicio -= espacio_entre_lineas
 
         # Hora
-        pdc.TextOut(x_centro, y_inicio, f"Hora: {hora_actual}")
-        y_inicio += espacio_entre_lineas
+        c.drawCentredString(x_centro, y_inicio, f"Hora: {hora_actual}")
+        y_inicio -= espacio_entre_lineas
 
-        # Dibujar una línea separadora
-        pdc.MoveTo(x_centro - 100, y_inicio)  # Punto de inicio de la línea
-        pdc.LineTo(x_centro + 1200, y_inicio)  # Punto final de la línea (ajustar longitud)
-        y_inicio += 40  # Espacio después de la línea
+        # Segunda línea separadora
+        c.line(100, y_inicio, ancho_hoja - 100, y_inicio)
+        y_inicio -= espacio_entre_lineas
 
-        # Nombre del usuario
-        pdc.TextOut(x_centro, y_inicio, f"{detalle}")
-        y_inicio += espacio_entre_lineas
-
-        
+        # Detalle (Nombre del usuario)
+        c.setFont("Helvetica-Bold", 26)
+        c.drawCentredString(x_centro, y_inicio, detalle)
+        y_inicio -= espacio_entre_lineas
 
         # Mensaje final
-        pdc.SelectObject(font_normal)
-        pdc.TextOut(x_centro, y_inicio, "Por favor espere su turno")
-        y_inicio += espacio_entre_lineas // 1
-        pdc.TextOut(x_centro, y_inicio, "¡¡Gracias por su paciencia!!")
+        c.setFont("Helvetica-Bold", 22)
+        c.drawCentredString(x_centro, y_inicio, "Por favor espere su turno")
+        y_inicio -= espacio_entre_lineas
+        c.drawCentredString(x_centro, y_inicio, "¡¡Gracias por su paciencia!!")
 
-        y_inicio += espacio_entre_lineas // 1
+        # Guardar el PDF
+        c.save()
 
-        #pdc.SelectObject(font_normal)
-        #pdc.TextOut(x_centro, y_inicio, "Municipalidad de Nuevo Chimbote")
-        #y_inicio += espacio_entre_lineas
+        print(f"Ticket guardado en: {pdf_path}")
 
+        self.top.after(100, self.top.destroy)  # Espera 100ms antes de destruir la ventana
+        self.top = None  # Eliminar la referencia a la ventana
 
-        # Finalizar impresión
-        pdc.EndPage()
-        pdc.EndDoc()
-        pdc.DeleteDC()
 
 #######################################################################################################################################################
 
@@ -681,16 +642,29 @@ class MainWindow:
 
 
     def obtener_siguiente_numero(self, cursor, prefijo):
-        prefijo_busqueda = f"{prefijo}%"
-        cursor.execute("SELECT TOP 1 numero_turno FROM turnos WHERE numero_turno LIKE ? ORDER BY id DESC", (prefijo_busqueda,))       
+        # Obtener la fecha actual
+        fecha_actual = datetime.now().strftime("%Y-%m-%d")
+
+        # Consultar el último turno del día actual con el prefijo dado
+        cursor.execute("""
+            SELECT TOP 1 numero_turno 
+            FROM turnos 
+            WHERE numero_turno LIKE ? 
+            AND CONVERT(DATE, fecha_hora) = ?
+            ORDER BY id DESC
+        """, (f"{prefijo}%", fecha_actual))
 
         ultimo_turno = cursor.fetchone()
+
         if ultimo_turno:
+            # Extraer el número del último turno y sumar 1
             ultimo_numero = int(ultimo_turno[0].split('-')[1])
             siguiente_numero = ultimo_numero + 1
         else:
-            siguiente_numero = 1  # Si no hay turnos previos, empezamos con el número 1
+            # Si no hay turnos para el día actual, empezar desde 1
+            siguiente_numero = 1
 
+        # Formatear el número de turno con el prefijo y ceros a la izquierda
         return f"{prefijo}-{str(siguiente_numero).zfill(4)}"
 
 
