@@ -16,13 +16,7 @@ class AdminPanel:
         self.turnos_atendidos = set()  # Para controlar el orden correcto de "Llamar" â†’ "Siguiente"
         self.limpiar_tablas_diariamente()
 
-        
-        
-
-
-
-
-
+ 
         # Ãcono de la ventana
         try:
             icon_path = "C:/Users/marie/OneDrive/Escritorio/SISTEMA/sistema_muni_g2/assets/logo.ico"
@@ -34,7 +28,15 @@ class AdminPanel:
         header_frame = tk.Frame(root, bg="#0056B3", height=80)
         header_frame.pack(fill=tk.X, side=tk.TOP)
 
-        
+        # Etiqueta para la fecha y hora
+        self.datetime_label = tk.Label(header_frame, text="", font=("Arial", 14, "bold"), fg="white", bg="#004080")
+        self.datetime_label.place(relx=0.5, rely=0.5, anchor="center")  # Centrado exacto
+
+
+        # Llamar a la función que actualiza la fecha y hora
+        self.actualizar_fecha_hora()
+
+                
 
         try:
             image_path = "C:/Users/marie/OneDrive/Escritorio/SISTEMA/Sistema_muni_g2/assets/logo_para_admin.png"
@@ -205,6 +207,12 @@ class AdminPanel:
         cancelar_button.grid(row=0,column=2,padx=15)
 
         self.cargar_turnos()
+
+    def actualizar_fecha_hora(self):
+        ahora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")  # Formato DD/MM/YYYY HH:MM:SS
+        self.datetime_label.config(text=ahora)  # Actualiza la etiqueta
+        self.root.after(1000, self.actualizar_fecha_hora)  # Se ejecuta cada segundo
+
 
 
     def regresar(self):
