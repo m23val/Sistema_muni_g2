@@ -516,14 +516,29 @@ class AdminPanel:
                 estado_actual = resultado[0].strip().lower()
                 ventanilla = resultado[1]  # Obtener la ventanilla del turno cancelado
 
+                print(f"Estado obtenido: '{estado_actual}'")
+
 
                 if estado_actual != "atendiendo":
                     messagebox.showwarning("Advertencia", "Solo se pueden cancelar turnos que estén en estado 'atendiendo'.")
                     return
+                
                 cursor.execute("UPDATE turnos SET estado = 'cancelado' WHERE numero_turno = ?", (turno,))
                 connection.commit()
                 messagebox.showinfo("Éxito", f"Turno {turno} cancelado.")
                 #self.cargar_turnos()
+
+                # 🔍 Buscar una ventanilla libre antes de asignar un turno
+                cursor.execute("""
+                    SELECT ventanilla 
+                    FROM turnos 
+                    WHERE estado = 'atendiendo' AND ventanilla = ?
+                """, (ventanilla,))
+                ventanilla_ocupada = cursor.fetchone()
+
+                if ventanilla_ocupada:
+                    print(f"La ventanilla {ventanilla} sigue ocupada. No se asignará otro turno.")  # 🔍 Depuración
+                    return
 
 
 
@@ -531,7 +546,7 @@ class AdminPanel:
                 cursor.execute("""
                     SELECT TOP 1 numero_turno 
                     FROM turnos 
-                    WHERE estado NOT IN ('completado', 'cancelado', 'atendiendo') 
+                    WHERE estado = 'espera' 
                     ORDER BY fecha_hora ASC
                 """)
                 siguiente_turno = cursor.fetchone()
