@@ -38,13 +38,13 @@ class VisualizePanel:
 
         # Reloj e información de hora
         self.clock_frame = tk.Frame(self.header_frame, bg="#E0E0E0")
-        self.clock_frame.place(relx=0.65, rely=0.01, relwidth=0.4, relheight=0.8)
+        self.clock_frame.place(relx=0.65, rely=0.01, relwidth=0.4, relheight=0.9)
 
         
 
         self.time_label = tk.Label(
             self.clock_frame,
-            font=("Arial", 30, "bold"),
+            font=("Arial", 35, "bold"),
             bg="#E0E0E0",
             fg="#000000",
             anchor="w",
@@ -53,7 +53,7 @@ class VisualizePanel:
 
         self.date_label = tk.Label(
             self.clock_frame,
-            font=("Arial", 16, "bold"),
+            font=("Arial", 18, "bold"),
             bg="#E0E0E0",
             fg="#000000",
             anchor="w",
@@ -83,21 +83,21 @@ class VisualizePanel:
 
         self.turno_label = tk.Label(
             self.background_frame,
-            text="Turno",
-            font=("Arial", 40, "bold"),
+            text="TURNO",
+            font=("Arial", 38, "bold"),
             bg="#0056B3",
             fg="#FFFFFF",
         )
-        self.turno_label.place(relx=0.1, rely=0.05, relwidth=0.4, relheight=0.25)
+        self.turno_label.place(relx=0.1, rely=0.05, relwidth=0.45, relheight=0.25)
 
         self.ventanilla_label = tk.Label(
             self.background_frame,
-            text="Ventanilla",
-            font=("Arial", 40, "bold"),
+            text="VENTANILLA",
+            font=("Arial", 38, "bold"),
             bg="#3B98FF",
             fg="white",
         )
-        self.ventanilla_label.place(relx=0.5, rely=0.05, relwidth=0.4, relheight=0.25)
+        self.ventanilla_label.place(relx=0.55, rely=0.05, relwidth=0.38, relheight=0.25)
 
         self.turno_actual_label = tk.Label(
             self.background_frame,
@@ -106,7 +106,7 @@ class VisualizePanel:
             bg="#0056B3",
             fg="white",
         )
-        self.turno_actual_label.place(relx=0.1, rely=0.32, relwidth=0.4, relheight=0.4)
+        self.turno_actual_label.place(relx=0.1, rely=0.32, relwidth=0.45, relheight=0.4)
 
         self.ventanilla_actual_label = tk.Label(
             self.background_frame,
@@ -115,13 +115,13 @@ class VisualizePanel:
             bg="#3B98FF",
             fg="white",
         )
-        self.ventanilla_actual_label.place(relx=0.5, rely=0.32, relwidth=0.4, relheight=0.4)
+        self.ventanilla_actual_label.place(relx=0.55, rely=0.32, relwidth=0.38, relheight=0.4)
 
 
         # Próximos turnos con bordes personalizados ################################################################################### FONDO PARA LA TABLA DE SIGUIENTES TURNOS
 
         self.siguientes_frame = tk.Frame(root, bg="#E4E4E4")
-        self.siguientes_frame.place(relx=0.67, rely=0.08, relwidth=0.3, relheight=0.85)  # Ocupa toda la parte derecha
+        self.siguientes_frame.place(relx=0.67, rely=0.02, relwidth=0.3, relheight=0.98)  # Ocupa toda la parte derecha
 
       
 
@@ -142,28 +142,28 @@ class VisualizePanel:
             turno_label = tk.Label(
                 turno_frame,
                 text="--",
-                font=("Arial", 24),
+                font=("Artifakt Element Black", 35),
                 bg="#FFFFFF",
                 fg="#000000",
                 justify="center",
             )
-            turno_label.pack(pady=10)
+            turno_label.pack(pady=8)
 
             # Crear borde verde grueso al final del cuadro
-            borde_inferior = tk.Frame(turno_frame, bg="#0056B3", height=40)
+            borde_inferior = tk.Frame(turno_frame, bg="#0056B3", height=50)
             borde_inferior.pack(fill="x", side="bottom")
 
             # Etiqueta para el estado (encima del borde verde grueso)
             estado_label = tk.Label(
                 turno_frame,
                 text="--",  # Texto inicial vacío, se actualizará dinámicamente
-                font=("Arial", 12, "italic"),
+                font=("Artifakt Element Black", 14, "italic"),
                 bg="#0056B3",
                 justify="center",
                 wraplength=480,
                 fg="#FFFFFF"  # Color a juego con el borde
             )
-            estado_label.place(relx=0.5, rely=0.8, anchor="center")  # Posicionado encima del borde
+            estado_label.place(relx=0.5, rely=0.85, anchor="center")  # Posicionado encima del borde      
 
 
             #self.siguientes_turnos_frames.append(turno_label)
@@ -175,13 +175,13 @@ class VisualizePanel:
 
         # Footer con nombre
         self.footer_frame = tk.Frame(root, bg="#0056B3")
-        self.footer_frame.place(relx=0.063, rely=0.78, relwidth=0.505, relheight=0.2)
+        self.footer_frame.place(relx=0.063, rely=0.78, relwidth=0.524, relheight=0.2)
         # el 0.73 es para el espaciado
 
         self.nombre_label = tk.Label(
             self.footer_frame,
             text="--",
-            font=("Arial", 35, "bold"), #25 por si los nombres son muy largos      30 para los nombres con longitud normal 
+            font=("Arial", 30, "bold"), #25 por si los nombres son muy largos      30 para los nombres con longitud normal 
             bg="#0056B3",  ##0056B3
             fg="white",
             anchor="center",
@@ -249,7 +249,7 @@ class VisualizePanel:
                         text=turno[0]  # Número del turno
                     )
                     self.siguientes_turnos_frames[idx]["estado_label"].config(
-                        text=turno[1]  # Estado del turno
+                        text=turno[1].upper()  # Estado del turno
                     )
 
                 # Limpia los cuadros sobrantes si hay menos de 4 turnos
