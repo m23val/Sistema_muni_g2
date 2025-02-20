@@ -88,7 +88,7 @@ class VisualizePanel:
             bg="#0056B3",
             fg="#FFFFFF",
         )
-        self.turno_label.place(relx=0.1, rely=0.05, relwidth=0.45, relheight=0.25)
+        self.turno_label.place(relx=0.08, rely=0.05, relwidth=0.45, relheight=0.25)
 
         self.ventanilla_label = tk.Label(
             self.background_frame,
@@ -97,7 +97,7 @@ class VisualizePanel:
             bg="#3B98FF",
             fg="white",
         )
-        self.ventanilla_label.place(relx=0.55, rely=0.05, relwidth=0.38, relheight=0.25)
+        self.ventanilla_label.place(relx=0.52, rely=0.05, relwidth=0.38, relheight=0.25)
 
         self.turno_actual_label = tk.Label(
             self.background_frame,
@@ -106,7 +106,7 @@ class VisualizePanel:
             bg="#0056B3",
             fg="white",
         )
-        self.turno_actual_label.place(relx=0.1, rely=0.32, relwidth=0.45, relheight=0.4)
+        self.turno_actual_label.place(relx=0.08, rely=0.32, relwidth=0.45, relheight=0.4)
 
         self.ventanilla_actual_label = tk.Label(
             self.background_frame,
@@ -115,7 +115,7 @@ class VisualizePanel:
             bg="#3B98FF",
             fg="white",
         )
-        self.ventanilla_actual_label.place(relx=0.55, rely=0.32, relwidth=0.38, relheight=0.4)
+        self.ventanilla_actual_label.place(relx=0.52, rely=0.32, relwidth=0.38, relheight=0.4)
 
 
         # Próximos turnos con bordes personalizados ################################################################################### FONDO PARA LA TABLA DE SIGUIENTES TURNOS
@@ -175,7 +175,7 @@ class VisualizePanel:
 
         # Footer con nombre
         self.footer_frame = tk.Frame(root, bg="#0056B3")
-        self.footer_frame.place(relx=0.063, rely=0.78, relwidth=0.524, relheight=0.2)
+        self.footer_frame.place(relx=0.05, rely=0.78, relwidth=0.517, relheight=0.2)
         # el 0.73 es para el espaciado
 
         self.nombre_label = tk.Label(
