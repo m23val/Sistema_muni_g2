@@ -1,3 +1,4 @@
+
 import tkinter as tk
 from tkinter import ttk, messagebox
 from db.connection import get_connection
@@ -19,7 +20,7 @@ class AdminPanel:
  
         # Ãcono de la ventana
         try:
-            icon_path = "C:/Users/marie/OneDrive/Escritorio/SISTEMA/sistema_muni_g2/assets/logo.ico"
+            icon_path = "C:/Users/Max/Desktop/Sistema_muni_g2-main/assets/logo.ico"
             self.root.iconbitmap(icon_path)
         except Exception as e:
             print(f"Error al cargar el ícono de la ventana: {e}")
@@ -28,9 +29,22 @@ class AdminPanel:
         header_frame = tk.Frame(root, bg="#0056B3", height=80)
         header_frame.pack(fill=tk.X, side=tk.TOP)
 
-        # Etiqueta para la fecha y hora
-        self.datetime_label = tk.Label(header_frame, text="", font=("Arial", 14, "bold"), fg="white", bg="#004080")
-        self.datetime_label.place(relx=0.5, rely=0.5, anchor="center")  # Centrado exacto
+        # Etiqueta para la fecha (centrada)
+        self.date_label = tk.Label(header_frame, text="", font=("Arial", 14), fg="white", bg="#0056B3")
+        self.date_label.place(relx=0.5, rely=0.5, anchor="center")  # Fecha en el centro
+
+        # Contenedor para la hora (a la derecha)
+        right_container = tk.Frame(header_frame, bg="#0056B3")
+        right_container.pack(side=tk.RIGHT, padx=20)
+
+        # Etiqueta para la hora y minutos (más grande)
+        self.time_label = tk.Label(right_container, text="", font=("Arial", 24, "bold"), fg="white", bg="#0056B3")
+        self.time_label.pack(side=tk.LEFT, padx=0)
+
+        # Etiqueta para los segundos (más pequeña)
+        self.seconds_label = tk.Label(right_container, text="", font=("Arial", 14), fg="white", bg="#0056B3")
+        self.seconds_label.pack(side=tk.LEFT, padx=0)
+
 
 
         # Llamar a la función que actualiza la fecha y hora
@@ -39,7 +53,7 @@ class AdminPanel:
                 
 
         try:
-            image_path = "C:/Users/marie/OneDrive/Escritorio/SISTEMA/Sistema_muni_g2/assets/logo_para_admin.png"
+            image_path = "C:/Users/Max/Desktop/Sistema_muni_g2-main/assets/logo_para_admin.png"
             image = Image.open(image_path).resize((250, 80), Image.Resampling.LANCZOS)
             self.logo = ImageTk.PhotoImage(image)
         except Exception as e:
@@ -49,7 +63,7 @@ class AdminPanel:
         logo_label.pack(side=tk.LEFT, padx=20, pady=12)
 
         try:
-            image_path_admin = "C:/Users/marie/OneDrive/Escritorio/SISTEMA/Sistema_muni_g2/assets/logo_admin.png"
+            image_path_admin = "C:/Users/Max/Desktop/Sistema_muni_g2-main/assets/logo_admin.png"
             image_admin = Image.open(image_path_admin).resize((30, 30), Image.Resampling.LANCZOS)
             self.logo_admin = ImageTk.PhotoImage(image_admin)
         except Exception as e:
@@ -86,14 +100,43 @@ class AdminPanel:
 
         #TABLA DE TURNOS PENDIENTES 
         
-        # Tabla de turnos pendientes
-        self.tree = ttk.Treeview(tree_frame,
-            columns=("Turno", "DNI/RUC", "Nombres", "Motivo", "Estado", "Hora", "Ventanilla"),
-            show="headings", height=10, yscrollcommand=scrollbar.set)
+        # Marco para la tabla de turnos pendientes
+        tree_frame = tk.Frame(root)
+        tree_frame.pack(pady=10, padx=20, fill=tk.BOTH, expand=True)  # Asegura que el frame se expanda
 
-        for col in ("Turno", "DNI/RUC", "Nombres", "Motivo", "Estado", "Hora", "Ventanilla"):
-            self.tree.heading(col, text=col)
-            self.tree.column(col, width=100)  # Ajusta el ancho según sea necesario
+        # Scrollbar para la tabla
+        scrollbar = tk.Scrollbar(tree_frame, orient="vertical")
+
+        # Crear el Treeview
+        self.tree = ttk.Treeview(
+            tree_frame,
+            columns=("Turno", "DNI/RUC", "Nombres", "Motivo", "Estado", "Hora", "Ventanilla"),
+            show="headings",
+            height=10,
+            yscrollcommand=scrollbar.set
+        )
+
+        # Configurar las columnas
+        self.tree.heading("Turno", text="Turno", anchor=tk.CENTER)
+        self.tree.heading("DNI/RUC", text="DNI/RUC", anchor=tk.CENTER)
+        self.tree.heading("Nombres", text="Nombres", anchor=tk.W)  # Alineación a la izquierda
+        self.tree.heading("Motivo", text="Motivo", anchor=tk.CENTER)
+        self.tree.heading("Estado", text="Estado", anchor=tk.CENTER)
+        self.tree.heading("Hora", text="Hora", anchor=tk.CENTER)
+        self.tree.heading("Ventanilla", text="Ventanilla", anchor=tk.CENTER)
+
+        # Ajustar el ancho de las columnas
+        self.tree.column("Turno", width=200, anchor=tk.CENTER, stretch=tk.NO)
+        self.tree.column("DNI/RUC", width=200, anchor=tk.CENTER, stretch=tk.NO)
+        self.tree.column("Nombres", width=100, anchor=tk.W, stretch=tk.YES)  # Columna "Nombres" más ancha
+        self.tree.column("Motivo", width=250, anchor=tk.CENTER, stretch=tk.NO)
+        self.tree.column("Estado", width=200, anchor=tk.CENTER, stretch=tk.NO)
+        self.tree.column("Hora", width=200, anchor=tk.CENTER, stretch=tk.NO)
+        self.tree.column("Ventanilla", width=100, anchor=tk.CENTER, stretch=tk.NO)
+
+        
+
+        
 
         self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.config(command=self.tree.yview)
@@ -134,9 +177,9 @@ class AdminPanel:
 
 
         try:
-            siguiente_icon = Image.open("C:/Users/marie/OneDrive/Escritorio/SISTEMA/Sistema_muni_g2/assets/siguiente.png").resize((20, 20), Image.Resampling.LANCZOS)
-            llamar_icon = Image.open("C:/Users/marie/OneDrive/Escritorio/SISTEMA/Sistema_muni_g2/assets/llamar.png").resize((20, 20), Image.Resampling.LANCZOS)
-            cancelar_icon = Image.open("C:/Users/marie/OneDrive/Escritorio/SISTEMA/Sistema_muni_g2/assets/cancelar.png").resize((20, 20), Image.Resampling.LANCZOS)
+            siguiente_icon = Image.open("C:/Users/Max/Desktop/Sistema_muni_g2-main/assets/siguiente.png").resize((20, 20), Image.Resampling.LANCZOS)
+            llamar_icon = Image.open("C:/Users/Max/Desktop/Sistema_muni_g2-main/assets/llamar.png").resize((20, 20), Image.Resampling.LANCZOS)
+            cancelar_icon = Image.open("C:/Users/Max/Desktop/Sistema_muni_g2-main/assets/cancelar.png").resize((20, 20), Image.Resampling.LANCZOS)
 
             self.siguiente_icon_image = ImageTk.PhotoImage(siguiente_icon)
             self.llamar_icon_image = ImageTk.PhotoImage(llamar_icon)
@@ -149,7 +192,7 @@ class AdminPanel:
 
         # Botón para ver turnos cancelados con solo un ícono
         try:
-             cancelados_icon_path = r"C:/Users/marie/OneDrive/Escritorio/SISTEMA/Sistema_muni_g2/assets/cancelados.png"  # Asegúrate de que la ruta sea correcta
+             cancelados_icon_path = r"C:/Users/Max/Desktop/Sistema_muni_g2-main/assets/cancelados.png"  # Asegúrate de que la ruta sea correcta
              cancelados_icon_image = Image.open(cancelados_icon_path).resize((50, 50), Image.Resampling.LANCZOS)  # Ajusta el tamaño según sea necesario
              self.cancelados_icon_photo = ImageTk.PhotoImage(cancelados_icon_image)
         except Exception as e:
@@ -209,16 +252,25 @@ class AdminPanel:
         self.cargar_turnos()
 
     def actualizar_fecha_hora(self):
-        ahora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")  # Formato DD/MM/YYYY HH:MM:SS
-        self.datetime_label.config(text=ahora)  # Actualiza la etiqueta
-        self.root.after(1000, self.actualizar_fecha_hora)  # Se ejecuta cada segundo
+        ahora = datetime.now()
+        fecha = ahora.strftime("%d/%m/%Y")  # Formato DD/MM/YYYY
+        hora_minutos = ahora.strftime("%H:%M")  # Formato HH:MM
+        segundos = ahora.strftime("%S")  # Formato SS
+
+        # Actualizar las etiquetas
+        self.date_label.config(text=fecha)  # Fecha en el centro
+        self.time_label.config(text=hora_minutos)  # Hora y minutos (más grande)
+        self.seconds_label.config(text=f":{segundos}")  # Segundos (más pequeños)
+
+        # Se ejecuta cada segundo
+        self.root.after(1000, self.actualizar_fecha_hora)
 
 
 
     def regresar(self):
         try:
             import importlib.util
-            spec = importlib.util.spec_from_file_location("menu_general", r"C:\Users\marie\OneDrive\Escritorio\SISTEMA\Sistema_muni_g2\SISTEMA MUNI\ui\menu_general.py")
+            spec = importlib.util.spec_from_file_location("menu_general", r"C:/Users/Max/Desktop/Sistema_muni_g2-main/SISTEMA MUNI/ui/menu_general.py")
             menu_general = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(menu_general)
 
@@ -350,7 +402,8 @@ class AdminPanel:
                 cursor.execute("""
                     SELECT TOP 1 numero_turno 
                     FROM turnos 
-                    WHERE estado NOT IN ('completado', 'cancelado', 'atendiendo') 
+                    WHERE estado NOT IN ('completado', 'cancelado', 'atendiendo')
+                    AND CONVERT(DATE, fecha_hora) = CONVERT(DATE, GETDATE()) 
                     ORDER BY fecha_hora ASC;
                 """)
                 turno = cursor.fetchone()
@@ -450,7 +503,8 @@ class AdminPanel:
                 cursor.execute("""
                     SELECT TOP 1 numero_turno, ventanilla 
                     FROM turnos 
-                    WHERE estado NOT IN ('completado', 'cancelado', 'atendiendo') 
+                    WHERE estado NOT IN ('completado', 'cancelado', 'atendiendo')
+                    AND CONVERT(DATE, fecha_hora) = CONVERT(DATE, GETDATE()) 
                     ORDER BY fecha_hora ASC;
                 """)
                 next_turno = cursor.fetchone()
@@ -586,7 +640,7 @@ class AdminPanel:
 
         # Cargar ícono para la ventana de turnos cancelados
         try:
-            icon_path = "C:/Users/marie/OneDrive/Escritorio/SISTEMA/Sistema_muni_g2/assets/logo.ico"
+            icon_path = "C:/Users/Max/Desktop/Sistema_muni_g2-main/assets/logo.ico"
             self.ventana_cancelados.iconbitmap(icon_path)
         except Exception as e:
             print(f"Error al cargar el ícono de la ventana: {e}")
